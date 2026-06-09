@@ -1149,4 +1149,58 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
   50% { transform: scale(1.08); opacity: 1; }
 }
 
+/* ── CIRCLE SECTIONS IN HOME TAB ────────────────────────── */
+.home-sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+}
+
+.circle-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.circle-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.csh-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--t1);
+  letter-spacing: -0.2px;
+}
+
+.circle-section-empty {
+  background: var(--s2);
+  border: 1px dashed var(--empty-border);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--t3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.circle-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.order-card-wrapper {
+  width: 100%;
+}
+
 

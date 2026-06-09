@@ -275,12 +275,13 @@ async function handleInviteCode(code) {
   } catch(e) { toast('❌ '+e.message); }
 }
 
-async function createOrder(link, platform, lat, lng) {
-  const circle = curCircle();
+async function createOrder(link, platform, lat, lng, circleId) {
+  const targetCircleId = circleId || currentCircleId;
+  const circle = myCircles.find(c => c.id === targetCircleId) || curCircle();
   const restaurant = platform === 'shopeefood' ? 'ShopeeFood' : 'GrabFood';
   const emoji = platform === 'shopeefood' ? '🧋' : '🍜';
   const data   = {
-    circleId:currentCircleId, circleName:circle?.name||'',
+    circleId:targetCircleId, circleName:circle?.name||'',
     hostUid:currentUser.uid, hostName:currentUser.displayName, hostAvatar:currentUser.photoURL,
     restaurant, emoji, platform, link,
     status:'collecting',
@@ -423,10 +424,18 @@ async function loadOrdersHistory() {
 ═══════════════════════════════════════════════════════════ */
 function subscribeToOrders() {
   cleanupSubs();
-  if (!currentCircleId) return;
+  const circleIds = myCircles.map(c => c.id);
+  if (circleIds.length === 0) {
+    circleOrders = [];
+    if (currentScreen === 'main' && currentTab === 'home') {
+      const body = document.getElementById('screenBody');
+      if (body) renderHomeTab(body);
+    }
+    return;
+  }
   unsubOrders = db.collection('orders')
-    .where('circleId','==',currentCircleId)
-    .where('status','==','collecting')
+    .where('circleId', 'in', circleIds)
+    .where('status', '==', 'collecting')
     .onSnapshot(snap => {
       circleOrders = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
       circleOrders.sort((a,b) => {
@@ -718,8 +727,6 @@ function renderApp() {
 ═══════════════════════════════════════════════════════════ */
 function renderHomeTab(body) {
   body.className = 'home-body';
-  const order  = curOrder();
-  const isHost = order && order.hostUid === currentUser?.uid;
   body.innerHTML = `
     <div class="greeting-row">
       <div class="greeting-text">
@@ -728,23 +735,76 @@ function renderHomeTab(body) {
       </div>
       <img class="greeting-avatar" src="${currentUser?.photoURL||''}" id="avatarBtn" onerror="this.style.display='none'" alt="">
     </div>
-    <div id="homeContent"></div>`;
+    <div id="homeContent" class="home-sections-list"></div>`;
+    
   body.querySelector('#avatarBtn')?.addEventListener('click',()=>{ currentTab='profile'; renderApp(); });
+  
   const content = body.querySelector('#homeContent');
-  if (!order) {
+  if (myCircles.length === 0) {
     content.innerHTML = `
       <div class="empty-state">
-        <div class="es-icon">🍽️</div>
-        <div class="es-title">${curCircle()?.name||'Nhóm'} chưa có đơn gom</div>
-        <div class="es-desc">Hãy mở đơn để mọi người cùng order tiết kiệm phí ship hôm nay!</div>
-        <button class="es-cta" id="esCta">📢 Tạo Đơn Gom Ngay</button>
-        <span class="es-link" id="esNearby">📍 Xem đơn gần đây →</span>
+        <div class="es-icon">🏢</div>
+        <div class="es-title">Bạn chưa tham gia nhóm nào</div>
+        <div class="es-desc">Hãy tạo nhóm mới hoặc nhập mã mời của bạn bè để bắt đầu gom đơn chung.</div>
+        <button class="es-cta" id="esJoinCreateBtn">＋ Tham gia hoặc Tạo Nhóm</button>
       </div>`;
-    content.querySelector('#esCta').onclick  = showCreateSheet;
-    content.querySelector('#esNearby').onclick = ()=>{ currentTab='nearby'; renderApp(); };
-  } else {
-    renderActiveOrderCard(content, order);
+    content.querySelector('#esJoinCreateBtn').onclick = showCircleModal;
+    return;
   }
+
+  // Render sections for each circle
+  content.innerHTML = myCircles.map(circle => {
+    // Find all active orders for this circle
+    const orders = circleOrders.filter(o => o.circleId === circle.id && o.status === 'collecting');
+    
+    return `
+      <div class="circle-section" data-circle-id="${circle.id}">
+        <div class="circle-section-header">
+          <div class="csh-title">🏢 ${circle.name}</div>
+          <button class="csh-btn btn-ghost" data-circle-id="${circle.id}" data-action="create-order" style="padding: 4px 8px; font-size: 10px; margin: 0;">
+            ＋ 📢 Mở đơn gom
+          </button>
+        </div>
+        <div class="circle-section-content" id="circleContent-${circle.id}">
+          ${orders.length === 0 
+            ? `
+              <div class="circle-section-empty">
+                <span>Chưa có đơn gom nào đang mở trong nhóm này.</span>
+                <span class="es-link" data-circle-id="${circle.id}" data-action="create-order">Mở đơn ngay →</span>
+              </div>
+            `
+            : `
+              <div class="circle-orders-list" id="circleOrdersList-${circle.id}"></div>
+            `
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Bind clicks for create order buttons
+  content.querySelectorAll('[data-action="create-order"]').forEach(btn => {
+    btn.onclick = () => {
+      const cid = btn.dataset.circleId;
+      showCreateSheet(cid);
+    };
+  });
+
+  // Render order cards inside their respective circle lists
+  myCircles.forEach(circle => {
+    const orders = circleOrders.filter(o => o.circleId === circle.id && o.status === 'collecting');
+    if (orders.length > 0) {
+      const listContainer = content.querySelector(`#circleOrdersList-${circle.id}`);
+      if (listContainer) {
+        orders.forEach(order => {
+          const cardWrapper = document.createElement('div');
+          cardWrapper.className = 'order-card-wrapper';
+          listContainer.appendChild(cardWrapper);
+          renderActiveOrderCard(cardWrapper, order);
+        });
+      }
+    }
+  });
 }
 
 function renderActiveOrderCard(container, order) {
@@ -1390,7 +1450,8 @@ function showAlertsSettingsSheet() {
 /* ═══════════════════════════════════════════════════════════
    CREATE ORDER SHEET
 ═══════════════════════════════════════════════════════════ */
-function showCreateSheet() {
+function showCreateSheet(circleId) {
+  const targetCircleId = circleId && typeof circleId === 'string' ? circleId : currentCircleId;
   const scr = document.getElementById('screen');
   scr.querySelector('.sheet-scrim')?.remove();
   const scrim = document.createElement('div');
@@ -1399,7 +1460,7 @@ function showCreateSheet() {
     <div class="sheet-box">
       <div class="sh-handle"></div>
       <div class="sh-title">Tạo Đơn Gom 📢</div>
-      <div class="sh-sub">Mở link group order trong app Grab/ShopeeFood, sao chép và dán vào đây</div>
+      <div class="sh-sub">Mở link group order trong app Grab/ShopeeFood, sao chép and dán vào đây</div>
       <div class="link-wrap">
         <input class="link-input" id="linkInput" placeholder="Dán link đơn nhóm Grab hoặc ShopeeFood vào đây…" autocomplete="off">
         <button class="link-paste" id="pasteBtn" title="Dán từ clipboard">📋</button>
@@ -1426,14 +1487,14 @@ function showCreateSheet() {
   scrim.querySelector('#broadcastBtn').onclick=async()=>{
     const link=scrim.querySelector('#linkInput').value.trim();
     if(!link){ toast('⚠️ Hãy dán link trước!'); return; }
-    if(!currentCircleId){ toast('⚠️ Bạn chưa chọn nhóm nào!'); return; }
+    if(!targetCircleId){ toast('⚠️ Bạn chưa chọn nhóm nào!'); return; }
     const btn=scrim.querySelector('#broadcastBtn');
     btn.disabled=true; btn.innerHTML='<span>⏳ Đang tạo đơn…</span>';
     try{
       const platform=detectPlatform(link);
       let lat=null,lng=null;
       try{ const pos=await getUserLocation(); lat=pos.lat; lng=pos.lng; }catch(e){}
-      await createOrder(link,platform,lat,lng);
+      await createOrder(link,platform,lat,lng,targetCircleId);
       scrim.remove(); currentTab='home'; renderApp();
       setTimeout(()=>toast(`🍜 Đã mở đơn gom! Mọi người trong nhóm sẽ thấy ngay.`),300);
     }catch(e){
