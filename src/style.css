@@ -436,7 +436,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
 /* ══════════════════════════════════════════════════════════
    BOTTOM SHEETS & MODALS
 ══════════════════════════════════════════════════════════ */
-.sheet-scrim{position:absolute;inset:0;background:var(--scrim);backdrop-filter:blur(4px);z-index:2000;display:flex;flex-direction:column;justify-content:flex-end}
+.sheet-scrim{position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(4px);z-index:2000;display:flex;flex-direction:column;justify-content:flex-end}
 .sheet-box{background:var(--sheet-bg);border-top-left-radius:26px;border-top-right-radius:26px;border-top:1px solid var(--sheet-border);padding:20px 18px 28px;display:flex;flex-direction:column;gap:13px;animation:sheetUp .25s cubic-bezier(.4,0,.2,1)}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .sh-handle{width:40px;height:4px;background:var(--handle-bg);border-radius:10px;margin:0 auto}
@@ -461,7 +461,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
 .bcast-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 .pulse-ring{position:absolute;inset:-4px;border-radius:19px;border:2px solid rgba(255,159,28,.4);animation:ringPulse 2s ease-out infinite}
 @keyframes ringPulse{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
-.dl-scrim{position:absolute;inset:0;background:var(--scrim);backdrop-filter:blur(4px);z-index:2010;display:flex;flex-direction:column;justify-content:flex-end}
+.dl-scrim{position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(4px);z-index:2010;display:flex;flex-direction:column;justify-content:flex-end}
 .dl-box{background:var(--sheet-bg);border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid var(--sheet-border);padding:18px 16px 24px;display:flex;flex-direction:column;gap:11px;animation:sheetUp .25s cubic-bezier(.4,0,.2,1)}
 .dl-logo{font-size:32px;text-align:center}
 .dl-title{font-size:15px;font-weight:900;text-align:center;letter-spacing:-.3px;color:var(--t1)}
@@ -479,7 +479,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
 .dl-cta:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
 .dl-cancel{width:100%;background:transparent;border:1px solid var(--border);border-radius:11px;padding:10px;font-size:11px;font-weight:700;color:var(--t2);cursor:pointer;font-family:var(--ff);transition:all .18s}
 .dl-cancel:hover{background:var(--s3)}
-.cm-scrim{position:absolute;inset:0;background:var(--scrim);backdrop-filter:blur(8px);z-index:2020;display:flex;align-items:center;justify-content:center;padding:20px}
+.cm-scrim{position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(8px);z-index:2020;display:flex;align-items:center;justify-content:center;padding:20px}
 .cm-box{background:var(--sheet-bg);border:1px solid var(--sheet-border);border-radius:22px;width:100%;overflow:hidden;animation:popIn .25s cubic-bezier(.4,0,.2,1);max-height:80%}
 @keyframes popIn{from{transform:scale(.88);opacity:0}to{transform:scale(1);opacity:1}}
 .cm-hdr{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
