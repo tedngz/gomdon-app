@@ -1896,14 +1896,58 @@ function showCreateSheet(circleId) {
     if(!selCircleId){ toast('⚠️ Bạn chưa chọn nhóm nào!'); return; }
     const btn=scrim.querySelector('#broadcastBtn');
     btn.disabled=true; btn.innerHTML='<span>⏳ Đang tạo đơn…</span>';
+    
+    // Start getting user location concurrently inside user gesture click (required by iOS Safari)
+    const locationPromise = getUserLocation().catch(() => null);
+    
     try{
       const platform=detectPlatform(link);
-      // Fast creation: use cached userLocation if available to avoid blocking on browser prompts
-      const lat = userLocation ? userLocation.lat : null;
-      const lng = userLocation ? userLocation.lng : null;
-      await createOrder(link,platform,lat,lng,selCircleId,customTitle);
+      // Wait up to 250ms for the geolocation query to resolve instantly (if already cached/granted)
+      // otherwise, proceed with creating order immediately using cached or null.
+      let lat = userLocation ? userLocation.lat : null;
+      let lng = userLocation ? userLocation.lng : null;
+      
+      const pos = await Promise.race([
+        locationPromise,
+        new Promise(r => setTimeout(() => r(null), 250))
+      ]);
+      if (pos) {
+        lat = pos.lat;
+        lng = pos.lng;
+      }
+      
+      const newOrder = await createOrder(link,platform,lat,lng,selCircleId,customTitle);
       scrim.remove(); currentTab='home'; renderApp();
       setTimeout(()=>toast(`🍜 Đã mở đơn gom! Mọi người trong nhóm sẽ thấy ngay.`),300);
+      
+      // If the location request is still pending, we wait for it and update the order document once it finishes!
+      if (!lat || !lng) {
+        locationPromise.then(async (realPos) => {
+          if (realPos) {
+            console.log('Location fetched post-creation, updating Firestore order:', newOrder.id);
+            try {
+              const freshSnap = await db.collection('orders').doc(newOrder.id).get();
+              if (freshSnap.exists) {
+                const freshOrder = freshSnap.data();
+                const updatedParticipants = (freshOrder.participants || []).map(p => {
+                  if (p.uid === currentUser.uid) {
+                    return { ...p, lat: realPos.lat, lng: realPos.lng };
+                  }
+                  return p;
+                });
+                await db.collection('orders').doc(newOrder.id).update({
+                  lat: realPos.lat,
+                  lng: realPos.lng,
+                  participants: updatedParticipants
+                });
+                console.log('Successfully updated order with live location post-creation.');
+              }
+            } catch (err) {
+              console.error('Error updating order location post-creation:', err);
+            }
+          }
+        });
+      }
     }catch(e){
       btn.disabled=false; btn.innerHTML='<div class="pulse-ring"></div><span>📢 Gom Đơn Với Nhóm!</span>';
       toast('❌ '+e.message);
