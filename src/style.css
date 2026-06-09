@@ -1203,4 +1203,26 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
   width: 100%;
 }
 
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981, 0 0 16px #10b981;
+  animation: blink 1.5s infinite;
+  flex-shrink: 0;
+}
+.live-location-badge {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
 

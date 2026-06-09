@@ -38,6 +38,10 @@ let circleOrders = [];     // Real-time orders from Firestore
 let nearbyOrders = [];     // GPS-filtered orders
 let userLocation = null;   // {lat, lng}
 let unsubOrders  = null;   // Firestore unsubscribe
+let hostLocationWatchId = null; // Geolocation watch ID for host
+let lastWrittenCoords = null;   // Last written {lat, lng} for host to optimize Firestore writes
+let lastWrittenOrderId = null;  // Active order ID being tracked
+let isFetchingUserLocation = false; // Flag to prevent concurrent geolocation fetches
 
 // UI state
 let currentTab    = 'home';
@@ -201,6 +205,12 @@ function initFirebase() {
         } else {
           subscribeToOrders();
           renderApp();
+          getUserLocation().then(() => {
+            if (currentScreen === 'main' && currentTab === 'home') {
+              renderApp();
+            }
+          }).catch(e => console.warn('Initial user location fetch failed:', e));
+          
           // Handle pending invite from URL
           const pending = sessionStorage.getItem('pending_invite');
           if (pending) {
@@ -504,6 +514,50 @@ function subscribeToOrders() {
         const tB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date();
         return tB - tA;
       });
+
+      // Handle host live location sharing
+      const activeHostingOrder = circleOrders.find(o => o.hostUid === currentUser?.uid && (o.status === 'collecting' || o.status === 'closed'));
+      if (activeHostingOrder) {
+        if (hostLocationWatchId && lastWrittenOrderId !== activeHostingOrder.id) {
+          navigator.geolocation.clearWatch(hostLocationWatchId);
+          hostLocationWatchId = null;
+          lastWrittenCoords = null;
+        }
+        
+        if (!hostLocationWatchId) {
+          const orderId = activeHostingOrder.id;
+          lastWrittenOrderId = orderId;
+          console.log('Starting geolocation watch for host active order:', orderId);
+          hostLocationWatchId = navigator.geolocation.watchPosition(
+            pos => {
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              const hasShifted = !lastWrittenCoords || 
+                Math.abs(lat - lastWrittenCoords.lat) > 0.0001 || 
+                Math.abs(lng - lastWrittenCoords.lng) > 0.0001;
+              if (hasShifted) {
+                console.log('Host location shifted, updating Firestore:', lat, lng);
+                db.collection('orders').doc(orderId).update({ lat, lng })
+                  .then(() => {
+                    lastWrittenCoords = { lat, lng };
+                  })
+                  .catch(e => console.error('Error updating host location in Firestore:', e));
+              }
+            },
+            err => console.warn('Host location watch error:', err),
+            { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+          );
+        }
+      } else {
+        if (hostLocationWatchId) {
+          console.log('No active hosting order found, clearing watch');
+          navigator.geolocation.clearWatch(hostLocationWatchId);
+          hostLocationWatchId = null;
+          lastWrittenCoords = null;
+          lastWrittenOrderId = null;
+        }
+      }
+
       if (currentScreen === 'main' && currentTab === 'home') {
         const body = document.getElementById('screenBody');
         if (body) renderHomeTab(body);
@@ -513,6 +567,13 @@ function subscribeToOrders() {
 
 function cleanupSubs() {
   if (unsubOrders) { unsubOrders(); unsubOrders=null; }
+  if (hostLocationWatchId) {
+    navigator.geolocation.clearWatch(hostLocationWatchId);
+    hostLocationWatchId = null;
+    lastWrittenCoords = null;
+    lastWrittenOrderId = null;
+    console.log('Cleared host location watch');
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -888,14 +949,49 @@ function renderActiveOrderCard(container, order) {
             🚀 Mở Grab/Shopee &amp; Chọn Món
           </button>
           
-          ${order.lat && order.lng 
-            ? `
-              <a href="https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}" target="_blank" class="btn-ghost" style="width:100%;justify-content:center;margin-bottom:8px;font-size:11px;font-weight:700;color:${isSh?'var(--shopee)':'var(--grab)'};border-color:${isSh?'rgba(238,77,45,0.25)':'rgba(0,177,79,0.25)'};text-decoration:none;display:flex;align-items:center;gap:6px">
-                📍 Vị trí giao của Host (Bản đồ)
-              </a>
-            ` 
-            : ''
-          }
+          ${(() => {
+            // Trigger location fetch for guest in background if not available
+            if (!isHost && order.lat && order.lng && !userLocation && !isFetchingUserLocation) {
+              isFetchingUserLocation = true;
+              getUserLocation().then(() => {
+                isFetchingUserLocation = false;
+                renderApp();
+              }).catch(() => {
+                isFetchingUserLocation = false;
+              });
+            }
+            
+            if (order.lat && order.lng) {
+              if (isHost) {
+                return `
+                  <div class="live-location-badge host" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span class="live-dot"></span>
+                      <strong style="color:var(--t1)">Vị trí của bạn đang được chia sẻ trực tiếp</strong>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}" target="_blank" style="font-weight:700;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
+                      📍 Xem bản đồ
+                    </a>
+                  </div>
+                `;
+              } else {
+                const distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, order.lat, order.lng) : null;
+                const distanceStr = distance !== null ? `Cách bạn ${distLabel(distance)}` : 'Đang định vị...';
+                return `
+                  <div class="live-location-badge guest" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span class="live-dot"></span>
+                      <strong style="color:var(--t1)">Trực tiếp</strong>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}" target="_blank" style="font-weight:800;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
+                      📍 Xem bản đồ (${distanceStr})
+                    </a>
+                  </div>
+                `;
+              }
+            }
+            return '';
+          })()}
           
           <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px">
             <div style="font-size:11px;font-weight:800;color:var(--t1);margin-bottom:8px">👥 Thành viên (${ppl})</div>
