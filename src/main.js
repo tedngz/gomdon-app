@@ -520,7 +520,7 @@ function renderSetupScreen() {
 function renderLoading() {
   document.getElementById('screen').innerHTML = `
   <div class="loading-screen">
-    <div style="font-size:40px">🍜</div>
+    <img src="/logo.png" alt="Gom Đơn" style="height: 64px; width: auto; object-fit: contain; animation: logoPulse 1.5s ease-in-out infinite;">
     <div style="font-size:13px;color:var(--t2);font-weight:600">Đang tải dữ liệu…</div>
     <div class="loading-dots"><span></span><span></span><span></span></div>
   </div>`;
@@ -535,7 +535,7 @@ function renderAuth() {
   scr.innerHTML = `
   <div class="landing-container">
     <div class="landing-header">
-      <div class="landing-logo">🍜 Gom Đơn</div>
+      <div class="landing-logo"><img src="/logo.png" alt="Gom Đơn Logo" style="height: 38px; width: auto; object-fit: contain;"> Gom Đơn</div>
       <button class="auth-theme-btn" id="authThemeBtn">${themeIcon()}</button>
     </div>
     <div class="landing-hero">
@@ -661,7 +661,7 @@ function renderApp() {
 
     <div class="app-bar">
       <div class="bar-brand">
-        <div class="bar-logo">🍜</div>
+        <div class="bar-logo" style="background:none;box-shadow:none;border:none"><img src="/logo.png" alt="Gom Đơn" style="width:100%;height:100%;object-fit:contain"></div>
         <span class="bar-title">Gom Đơn</span>
       </div>
       <div class="bar-right">
