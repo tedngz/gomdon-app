@@ -973,6 +973,7 @@ function renderActiveOrderCard(container, order) {
                       📍 Xem bản đồ
                     </a>
                   </div>
+                  <div id="active-order-map-${order.id}" class="compact-map" style="height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
                 `;
               } else {
                 const distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, order.lat, order.lng) : null;
@@ -987,6 +988,7 @@ function renderActiveOrderCard(container, order) {
                       📍 Xem bản đồ (${distanceStr})
                     </a>
                   </div>
+                  <div id="active-order-map-${order.id}" class="compact-map" style="height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
                 `;
               }
             }
@@ -1050,6 +1052,62 @@ function renderActiveOrderCard(container, order) {
       </div>
     </div>
   `;
+
+  // Initialize Leaflet Map
+  const mapDiv = container.querySelector(`#active-order-map-${order.id}`);
+  if (mapDiv && window.L) {
+    setTimeout(() => {
+      try {
+        const map = L.map(mapDiv, {
+          center: [order.lat, order.lng],
+          zoom: 16,
+          zoomControl: false,
+          attributionControl: false,
+          dragging: false,
+          touchZoom: false,
+          doubleClickZoom: false,
+          scrollWheelZoom: false,
+          boxZoom: false,
+          keyboard: false
+        });
+        
+        const isDark = theme === 'dark';
+        const tileUrl = isDark 
+          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+          
+        L.tileLayer(tileUrl, {
+          maxZoom: 19
+        }).addTo(map);
+        
+        const hostIcon = L.divIcon({
+          html: `<div class="map-host-marker-pin ${isSh ? 'shopee' : 'grab'}">${order.emoji || '🍜'}</div>`,
+          className: 'custom-map-marker',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+        
+        L.marker([order.lat, order.lng], { icon: hostIcon }).addTo(map);
+        
+        if (!isHost && userLocation) {
+          const guestIcon = L.divIcon({
+            html: `<div class="map-guest-marker-pin">👤</div>`,
+            className: 'custom-map-marker',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
+          L.marker([userLocation.lat, userLocation.lng], { icon: guestIcon }).addTo(map);
+          
+          map.fitBounds([
+            [order.lat, order.lng],
+            [userLocation.lat, userLocation.lng]
+          ], { padding: [15, 15] });
+        }
+      } catch (e) {
+        console.warn('Error initializing map:', e);
+      }
+    }, 100);
+  }
 
   container.querySelector('#openAppBtn').onclick = () => {
     window.open(ensureAbsoluteUrl(order.link), '_blank');

@@ -1224,5 +1224,39 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
   justify-content: space-between;
   font-size: 11px;
 }
-
-
+.custom-map-marker {
+  background: transparent;
+  border: none;
+}
+.map-host-marker-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--grab);
+  font-size: 16px;
+  box-shadow: 0 0 10px rgba(0,177,79,0.5);
+}
+.map-host-marker-pin.shopee {
+  border-color: var(--shopee);
+  box-shadow: 0 0 10px rgba(238,77,45,0.5);
+}
+.map-guest-marker-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #3b82f6;
+  font-size: 11px;
+  box-shadow: 0 0 8px rgba(59,130,246,0.5);
+}
+.compact-map {
+  position: relative;
+  z-index: 1;
+}
