@@ -130,6 +130,19 @@ function calcDistance(lat1,lng1,lat2,lng2) {
   const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
   return Math.round(2*R*Math.asin(Math.sqrt(a)));
 }
+function getOrderCoordinates(order) {
+  if (order.lat && order.lng) {
+    return { lat: order.lat, lng: order.lng, isLive: true };
+  }
+  const name = (order.circleName || '').toLowerCase();
+  if (name.includes('bitexco')) {
+    return { lat: 10.771915, lng: 106.704426, isLive: false };
+  }
+  if (name.includes('saigon centre')) {
+    return { lat: 10.772506, lng: 106.701168, isLive: false };
+  }
+  return { lat: 10.7769, lng: 106.7009, isLive: false };
+}
 const distLabel = m => m < 1000 ? m+'m' : (m/1000).toFixed(1)+'km';
 const detectPlatform = url => (url||'').includes('shopee')||(url||'').includes('now.vn') ? 'shopeefood' : 'grab';
 function genCode(len=6){ return Math.random().toString(36).toUpperCase().slice(2,2+len); }
@@ -950,8 +963,11 @@ function renderActiveOrderCard(container, order) {
           </button>
           
           ${(() => {
+            const coords = getOrderCoordinates(order);
+            const isLive = coords.isLive;
+            
             // Trigger location fetch for guest in background if not available
-            if (!isHost && order.lat && order.lng && !userLocation && !isFetchingUserLocation) {
+            if (!isHost && !userLocation && !isFetchingUserLocation) {
               isFetchingUserLocation = true;
               getUserLocation().then(() => {
                 isFetchingUserLocation = false;
@@ -961,38 +977,37 @@ function renderActiveOrderCard(container, order) {
               });
             }
             
-            if (order.lat && order.lng) {
-              if (isHost) {
-                return `
-                  <div class="live-location-badge host" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <span class="live-dot"></span>
-                      <strong style="color:var(--t1)">Vị trí của bạn đang được chia sẻ trực tiếp</strong>
-                    </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}" target="_blank" style="font-weight:700;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
-                      📍 Xem bản đồ
-                    </a>
+            if (isHost) {
+              return `
+                <div class="live-location-badge host" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    ${isLive ? '<span class="live-dot"></span>' : '📍'}
+                    <strong style="color:var(--t1)">
+                      ${isLive ? 'Vị trí của bạn đang được chia sẻ trực tiếp' : 'Địa chỉ giao hàng (Mặc định)'}
+                    </strong>
                   </div>
-                  <div id="active-order-map-${order.id}" class="compact-map" style="height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
-                `;
-              } else {
-                const distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, order.lat, order.lng) : null;
-                const distanceStr = distance !== null ? `Cách bạn ${distLabel(distance)}` : 'Đang định vị...';
-                return `
-                  <div class="live-location-badge guest" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <span class="live-dot"></span>
-                      <strong style="color:var(--t1)">Trực tiếp</strong>
-                    </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}" target="_blank" style="font-weight:800;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
-                      📍 Xem bản đồ (${distanceStr})
-                    </a>
+                  <a href="https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}" target="_blank" style="font-weight:700;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
+                    📍 Xem bản đồ
+                  </a>
+                </div>
+                <div id="active-order-map-${order.id}" class="compact-map" style="width: 100%; height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
+              `;
+            } else {
+              const distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, coords.lat, coords.lng) : null;
+              const distanceStr = distance !== null ? `Cách bạn ${distLabel(distance)}` : 'Đang định vị...';
+              return `
+                <div class="live-location-badge guest" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    ${isLive ? '<span class="live-dot"></span>' : '📍'}
+                    <strong style="color:var(--t1)">${isLive ? 'Trực tiếp' : 'Địa điểm nhóm'}</strong>
                   </div>
-                  <div id="active-order-map-${order.id}" class="compact-map" style="height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
-                `;
-              }
+                  <a href="https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}" target="_blank" style="font-weight:800;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
+                    📍 Xem bản đồ (${distanceStr})
+                  </a>
+                </div>
+                <div id="active-order-map-${order.id}" class="compact-map" style="width: 100%; height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
+              `;
             }
-            return '';
           })()}
           
           <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px">
@@ -1056,11 +1071,12 @@ function renderActiveOrderCard(container, order) {
   // Initialize Leaflet Map
   const mapDiv = container.querySelector(`#active-order-map-${order.id}`);
   if (mapDiv) {
+    const coords = getOrderCoordinates(order);
     const initMap = (retries = 5) => {
       if (window.L) {
         try {
           const map = L.map(mapDiv, {
-            center: [order.lat, order.lng],
+            center: [coords.lat, coords.lng],
             zoom: 16,
             zoomControl: false,
             attributionControl: false,
@@ -1075,9 +1091,11 @@ function renderActiveOrderCard(container, order) {
           const isDark = theme === 'dark';
           const tileUrl = isDark 
             ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+            : 'https://{s}.basemaps.cartocdn.com/rastertiles/rastertiles/voyager/{z}/{x}/{y}{r}.png'; // Fallback link correction if needed, CartoDB Voyager path
             
-          L.tileLayer(tileUrl, {
+          L.tileLayer(isDark 
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' 
+            : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             maxZoom: 19
           }).addTo(map);
           
@@ -1088,7 +1106,7 @@ function renderActiveOrderCard(container, order) {
             iconAnchor: [14, 14]
           });
           
-          L.marker([order.lat, order.lng], { icon: hostIcon }).addTo(map);
+          L.marker([coords.lat, coords.lng], { icon: hostIcon }).addTo(map);
           
           if (!isHost && userLocation) {
             const guestIcon = L.divIcon({
@@ -1100,7 +1118,7 @@ function renderActiveOrderCard(container, order) {
             L.marker([userLocation.lat, userLocation.lng], { icon: guestIcon }).addTo(map);
             
             map.fitBounds([
-              [order.lat, order.lng],
+              [coords.lat, coords.lng],
               [userLocation.lat, userLocation.lng]
             ], { padding: [15, 15] });
           }
