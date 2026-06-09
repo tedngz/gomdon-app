@@ -1,0 +1,1800 @@
+﻿<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#ff9f1c">
+<meta name="description" content="Gom Đơn – Đặt cùng, chia sẻ phí ship, tiết kiệm mỗi ngày">
+<title>Gom Đơn – Đặt Cùng, Tiết Kiệm Cùng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   TOKENS — brand colours stay the same in both themes
+═══════════════════════════════════════════════════════════ */
+:root {
+  --grab:#00b14f; --grab-d:#009040;
+  --shopee:#ee4d2d; --shopee-d:#d63f22;
+  --acc:#ff9f1c; --acc-d:#e88800;
+  --blue:#3b82f6;
+  --ff:'Be Vietnam Pro',sans-serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── DARK THEME (default) ───────────────────────────────── */
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --s0:#06080f; --s1:#0d1117; --s2:#131920; --s3:#1a2230; --s4:#1f2a3c;
+  --border:rgba(255,255,255,.07); --border-hi:rgba(255,255,255,.14);
+  --t1:#f0f4ff; --t2:#9aaac8; --t3:#4a5a72;
+  --screen-bg:linear-gradient(180deg,#0b1220 0%,#070c14 100%);
+  --bar-bg:linear-gradient(180deg,rgba(11,18,32,.98),rgba(11,18,32,.7));
+  --bar-shadow:none; --bar-border:rgba(255,255,255,.05);
+  --nav-bg:rgba(10,15,26,.95); --nav-border:rgba(255,255,255,.06);
+  --nav-hover:rgba(255,255,255,.05);
+  --pill-bg:rgba(255,255,255,.06); --pill-hover:rgba(255,255,255,.10);
+  --input-bg:rgba(0,0,0,.35); --input-border:rgba(255,255,255,.10);
+  --track-bg:rgba(255,255,255,.07); --row-border:rgba(255,255,255,.04);
+  --list-bg:rgba(0,0,0,.25); --empty-border:rgba(255,255,255,.08);
+  --stage-bg:radial-gradient(ellipse 80% 60% at 50% 20%,#0d1e3a 0%,#07091a 60%);
+  --stage-star:rgba(255,255,255,.35);
+  --auth-bg:#07091a;
+  --auth-name-grad:linear-gradient(135deg,#fff 0%,#ffcf6e 100%);
+  --auth-card-bg:rgba(13,17,23,.98); --auth-card-border:rgba(255,255,255,.08);
+  --sheet-bg:linear-gradient(180deg,#131920 0%,#0d1117 100%);
+  --sheet-border:rgba(255,255,255,.14); --handle-bg:rgba(255,255,255,.15);
+  --toast-bg:rgba(13,17,23,.97); --toast-border:rgba(255,255,255,.14);
+  --shadow:0 2px 8px rgba(0,0,0,.5); --card-shadow:none;
+  --scrim:rgba(0,0,0,.70); --notif-border:#0b1220;
+  --scrollbar:rgba(255,255,255,.10);
+}
+
+/* ── LIGHT THEME ────────────────────────────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+  --s0:#f0f4f8; --s1:#ffffff; --s2:#ffffff; --s3:#f1f5f9; --s4:#e2e8f0;
+  --border:rgba(0,0,0,.08); --border-hi:rgba(0,0,0,.15);
+  --t1:#0f172a; --t2:#475569; --t3:#94a3b8;
+  --screen-bg:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+  --bar-bg:rgba(255,255,255,.97);
+  --bar-shadow:0 1px 0 rgba(0,0,0,.07); --bar-border:rgba(0,0,0,.06);
+  --nav-bg:rgba(255,255,255,.97); --nav-border:rgba(0,0,0,.07);
+  --nav-hover:rgba(0,0,0,.04);
+  --pill-bg:rgba(0,0,0,.05); --pill-hover:rgba(0,0,0,.09);
+  --input-bg:rgba(0,0,0,.04); --input-border:rgba(0,0,0,.12);
+  --track-bg:rgba(0,0,0,.08); --row-border:rgba(0,0,0,.05);
+  --list-bg:rgba(0,0,0,.04); --empty-border:rgba(0,0,0,.08);
+  --stage-bg:radial-gradient(ellipse 80% 60% at 50% 20%,#dbeafe 0%,#eff6ff 60%);
+  --stage-star:rgba(100,120,180,.25);
+  --auth-bg:linear-gradient(180deg,#eef2ff 0%,#f0f9ff 100%);
+  --auth-name-grad:linear-gradient(135deg,#0f172a 0%,#e88800 100%);
+  --auth-card-bg:rgba(255,255,255,.99); --auth-card-border:rgba(0,0,0,.07);
+  --sheet-bg:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+  --sheet-border:rgba(0,0,0,.10); --handle-bg:rgba(0,0,0,.12);
+  --toast-bg:rgba(15,23,42,.95); --toast-border:rgba(0,0,0,.20);
+  --shadow:0 2px 12px rgba(0,0,0,.09); --card-shadow:0 1px 6px rgba(0,0,0,.07);
+  --scrim:rgba(0,0,0,.55); --notif-border:#ffffff;
+  --scrollbar:rgba(0,0,0,.12);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:var(--ff);background:var(--s0);color:var(--t1);overflow:hidden}
+::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:8px}
+
+/* ── OUTER STAGE ────────────────────────────────────────── */
+#stage{display:flex;align-items:center;justify-content:center;width:100vw;height:100%;background:var(--stage-bg);position:relative;overflow:hidden;transition:background .35s}
+#stage::before{content:'';position:absolute;inset:0;background-image:
+  radial-gradient(1.5px 1.5px at 15% 20%,var(--stage-star),transparent),
+  radial-gradient(1px 1px at 75% 15%,var(--stage-star),transparent),
+  radial-gradient(1.5px 1.5px at 40% 70%,var(--stage-star),transparent),
+  radial-gradient(1px 1px at 90% 50%,var(--stage-star),transparent),
+  radial-gradient(1px 1px at 25% 85%,var(--stage-star),transparent),
+  radial-gradient(1.5px 1.5px at 60% 40%,var(--stage-star),transparent)}
+
+/* ── PHONE SHELL ────────────────────────────────────────── */
+#phone{--pw:390px;--ph:844px;--pr:50px;width:var(--pw);height:var(--ph);background:#000;border-radius:var(--pr);padding:15px;border:3px solid #1c2535;position:relative;z-index:1;box-shadow:0 0 0 1px rgba(255,255,255,.05),0 40px 80px rgba(0,0,0,.9),0 0 100px rgba(255,159,28,.06)}
+#phone::before{content:'';position:absolute;inset:-1px;border-radius:calc(var(--pr) + 1px);background:linear-gradient(145deg,rgba(255,159,28,.12) 0%,transparent 35%,transparent 65%,rgba(0,177,79,.07) 100%);pointer-events:none;z-index:-1}
+.ph-notch{position:absolute;top:15px;left:50%;transform:translateX(-50%);width:115px;height:28px;background:#000;z-index:20;border-bottom-left-radius:18px;border-bottom-right-radius:18px}
+.ph-vol{position:absolute;left:-4px;top:130px;width:3px;height:35px;background:#111;border-radius:2px 0 0 2px;box-shadow:0 46px 0 #111}
+.ph-pwr{position:absolute;right:-4px;top:160px;width:3px;height:55px;background:#111;border-radius:0 2px 2px 0}
+
+#screen{width:100%;height:100%;background:var(--screen-bg);border-radius:calc(var(--pr) - 15px);overflow:hidden;display:flex;flex-direction:column;position:relative;transition:background .35s}
+
+/* ── STATUS BAR ─────────────────────────────────────────── */
+.status-bar{height:44px;padding:12px 20px 0;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;z-index:10;background:transparent}
+.sb-time{font-size:14px;font-weight:800;color:var(--t1);letter-spacing:.3px;transition:color .3s}
+.sb-icons{font-size:12px;color:var(--t1);display:flex;align-items:center;gap:5px;opacity:.75;transition:color .3s}
+
+/* ── APP BAR ────────────────────────────────────────────── */
+.app-bar{padding:8px 18px 12px;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;z-index:10;background:var(--bar-bg);box-shadow:var(--bar-shadow);backdrop-filter:blur(20px);border-bottom:1px solid var(--bar-border);transition:background .35s}
+.bar-brand{display:flex;align-items:center;gap:8px}
+.bar-logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#ff9f1c,#ff6000);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 3px 10px rgba(255,159,28,.4)}
+.bar-title{font-size:17px;font-weight:900;letter-spacing:-.4px;color:var(--t1)}
+.bar-right{display:flex;align-items:center;gap:8px}
+.bar-circle-pill{background:var(--pill-bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:10px;font-weight:700;color:var(--t2);display:flex;align-items:center;gap:5px;cursor:pointer;transition:all .18s;max-width:120px;overflow:hidden}
+.bar-circle-pill:hover{background:var(--pill-hover);color:var(--t1)}
+.bar-circle-pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-circle-dot{width:5px;height:5px;border-radius:50%;background:var(--grab);flex-shrink:0}
+.bar-notif{width:32px;height:32px;border-radius:50%;background:var(--pill-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .18s;position:relative}
+.bar-notif:hover{background:var(--pill-hover)}
+.bar-notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--acc);border:1.5px solid var(--notif-border);box-shadow:0 0 4px var(--acc)}
+.bar-theme-toggle{width:30px;height:30px;border-radius:50%;background:var(--pill-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .18s}
+.bar-theme-toggle:hover{background:var(--pill-hover);transform:rotate(20deg)}
+
+/* ── SCREEN BODY ─────────────────────────────────────────── */
+.screen-body{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:0}
+
+/* ── BOTTOM NAV ─────────────────────────────────────────── */
+.bottom-nav{flex-shrink:0;background:var(--nav-bg);backdrop-filter:blur(20px) saturate(1.5);border-top:1px solid var(--nav-border);padding:8px 8px calc(8px + var(--safe-bottom));display:flex;justify-content:space-around;align-items:flex-end;z-index:30;transition:background .35s}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 12px;border-radius:14px;transition:all .2s;min-width:52px;border:none;background:transparent}
+.nav-item:hover{background:var(--nav-hover)}
+.nav-item .ni-icon{font-size:20px;transition:transform .2s}
+.nav-item .ni-label{font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.3px;transition:color .2s}
+.nav-item.on .ni-label{color:var(--acc)}
+.nav-item.on .ni-icon{transform:scale(1.1)}
+.nav-fab{width:50px;height:50px;border-radius:18px;background:linear-gradient(135deg,#ff9f1c,#ff6000);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#000;cursor:pointer;border:none;box-shadow:0 4px 16px rgba(255,159,28,.4),0 0 0 2px rgba(255,159,28,.15);transition:all .18s;margin-bottom:4px}
+.nav-fab:hover{transform:scale(1.06);box-shadow:0 6px 20px rgba(255,159,28,.5)}
+.nav-fab:active{transform:scale(.96)}
+
+/* ══════════════════════════════════════════════════════════
+   SETUP SCREEN
+══════════════════════════════════════════════════════════ */
+.setup-screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--screen-bg);overflow-y:auto;transition:background .35s}
+.setup-hero{padding:32px 24px 20px;text-align:center;background:linear-gradient(180deg,rgba(255,159,28,.08),transparent);border-bottom:1px solid var(--border)}
+.setup-fire{font-size:48px;margin-bottom:12px}
+.setup-title{font-size:22px;font-weight:900;letter-spacing:-.5px;color:var(--t1)}
+.setup-sub{font-size:11px;color:var(--t2);line-height:1.6;margin-top:6px;max-width:260px;margin-left:auto;margin-right:auto}
+.setup-body{padding:18px;display:flex;flex-direction:column;gap:14px;flex:1}
+.setup-steps{background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.ss-step{display:flex;align-items:flex-start;gap:10px}
+.ss-num{min-width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ff9f1c,#ff6000);color:#000;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.ss-step div{font-size:11px;color:var(--t2);line-height:1.5}
+.ss-step div b{color:var(--t1);display:block;margin-bottom:1px}
+.ss-link{color:var(--blue);text-decoration:none;font-weight:600}
+.ss-link:hover{text-decoration:underline}
+.ss-divider{font-size:10px;font-weight:800;color:var(--t3);text-align:center;letter-spacing:.5px;text-transform:uppercase}
+.ss-textarea{width:100%;min-height:110px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:12px;padding:12px 14px;color:var(--t1);font-size:10px;font-family:monospace;outline:none;resize:vertical;transition:border-color .2s;line-height:1.5}
+.ss-textarea:focus{border-color:var(--blue)}
+.ss-textarea::placeholder{color:var(--t3)}
+.ss-btn{width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;font-size:14px;font-weight:900;font-family:var(--ff);background:linear-gradient(135deg,#ff9f1c,#ff6000);color:#000;box-shadow:0 6px 20px rgba(255,120,0,.4);transition:all .18s}
+.ss-btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.ss-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px 12px;font-size:11px;color:#fca5a5;margin-top:-6px}
+
+/* ══════════════════════════════════════════════════════════
+   AUTH SCREEN
+══════════════════════════════════════════════════════════ */
+.auth-screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;background:var(--auth-bg);transition:background .35s}
+.auth-theme-btn{position:absolute;top:14px;right:14px;z-index:10;background:var(--pill-bg);border:1px solid var(--border);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:all .18s}
+.auth-theme-btn:hover{transform:rotate(20deg)}
+.auth-hero{flex:1.4;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:32px;overflow:hidden}
+.auth-orb1{position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,159,28,.22),transparent 70%);top:-60px;left:-60px;animation:orbFloat 7s ease-in-out infinite}
+.auth-orb2{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(0,177,79,.18),transparent 70%);top:40px;right:-50px;animation:orbFloat 9s ease-in-out infinite reverse}
+.auth-orb3{position:absolute;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.15),transparent 70%);bottom:20px;left:30px;animation:orbFloat 11s ease-in-out infinite .5s}
+@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-15px) scale(1.04)}}
+.auth-app-icon{width:88px;height:88px;border-radius:24px;background:linear-gradient(135deg,#ff9f1c,#ff6000);display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 16px 48px rgba(255,159,28,.5),0 4px 12px rgba(0,0,0,.4);animation:iconPop .5s cubic-bezier(.4,0,.2,1);margin-bottom:16px;z-index:1}
+@keyframes iconPop{from{transform:scale(.6) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.auth-app-name{font-size:32px;font-weight:900;letter-spacing:-1px;z-index:1;background:var(--auth-name-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-tagline{font-size:13px;color:var(--t2);text-align:center;max-width:220px;line-height:1.5;z-index:1;margin-top:6px}
+.auth-card{flex:1;background:var(--auth-card-bg);border-top-left-radius:28px;border-top-right-radius:28px;border-top:1px solid var(--auth-card-border);padding:28px 24px 32px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -4px 24px rgba(0,0,0,.08)}
+.auth-card-title{font-size:16px;font-weight:800;color:var(--t1);margin-bottom:2px}
+.auth-card-sub{font-size:11px;color:var(--t2);margin-bottom:4px;line-height:1.4}
+.auth-btn{width:100%;padding:13px 16px;border-radius:13px;border:1px solid var(--border-hi);background:var(--s3);color:var(--t1);font-size:13px;font-weight:700;font-family:var(--ff);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .18s;text-align:left}
+.auth-btn:hover{background:var(--s4);border-color:var(--border-hi);transform:translateY(-1px)}
+.auth-btn:active{transform:scale(.98)}
+.auth-btn .ab-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.auth-btn .ab-text{flex:1;font-size:13px;color:var(--t1)}
+.auth-btn .ab-text small{display:block;font-size:10px;font-weight:500;color:var(--t2);margin-top:1px}
+.auth-btn.google .ab-icon{background:#fff}
+.auth-divider{display:flex;align-items:center;gap:10px;color:var(--t3);font-size:10px;font-weight:700}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-terms{font-size:9px;color:var(--t3);text-align:center;line-height:1.5}
+.auth-terms span{color:var(--acc)}
+
+/* Loading screen */
+.loading-screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--screen-bg)}
+.loading-dots{display:flex;gap:5px}
+.loading-dots span{width:7px;height:7px;border-radius:50%;background:var(--t3);animation:dotPulse 1.4s ease-in-out infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotPulse{0%,60%,100%{transform:scale(1);opacity:.5}30%{transform:scale(1.3);opacity:1}}
+
+/* ══════════════════════════════════════════════════════════
+   HOME TAB
+══════════════════════════════════════════════════════════ */
+.home-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.greeting-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
+.greeting-text h2{font-size:20px;font-weight:900;letter-spacing:-.4px;color:var(--t1)}
+.greeting-text p{font-size:11px;color:var(--t2);margin-top:2px}
+.greeting-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--acc);cursor:pointer;transition:opacity .18s}
+.greeting-avatar:hover{opacity:.85}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:32px 20px;border:1px dashed var(--empty-border);border-radius:20px;min-height:240px}
+.es-icon{width:64px;height:64px;border-radius:18px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:4px}
+.es-title{font-size:15px;font-weight:800;color:var(--t1)}
+.es-desc{font-size:11px;color:var(--t2);line-height:1.5;max-width:220px}
+.es-cta{background:linear-gradient(135deg,var(--acc),var(--acc-d));border:none;border-radius:12px;padding:11px 20px;font-size:13px;font-weight:800;color:#000;cursor:pointer;font-family:var(--ff);transition:all .18s}
+.es-cta:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.es-link{font-size:11px;color:var(--acc);font-weight:700;cursor:pointer;text-decoration:underline}
+.order-card{background:var(--s2);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow)}
+.oc-header{padding:14px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--border)}
+.oc-header.grab-bg{background:linear-gradient(135deg,rgba(0,177,79,.1),transparent)}
+.oc-header.shopee-bg{background:linear-gradient(135deg,rgba(238,77,45,.1),transparent)}
+.oc-icon{width:44px;height:44px;border-radius:12px;background:var(--s3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.oc-info{flex:1}
+.oc-rest{font-size:13px;font-weight:800;letter-spacing:-.2px;color:var(--t1)}
+.oc-sub{font-size:10px;color:var(--t2);margin-top:3px}
+.oc-plat{font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px}
+.oc-plat.grab{background:rgba(0,177,79,.15);color:#4ade80}
+.oc-plat.shopeefood{background:rgba(238,77,45,.15);color:#fca5a5}
+.status-chip{font-size:9px;font-weight:800;padding:4px 9px;border-radius:20px;display:flex;align-items:center;gap:4px;width:fit-content}
+.status-chip::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.status-chip.collecting{background:rgba(255,159,28,.1);color:var(--acc)}
+.status-chip.collecting::before{animation:blink 1.5s infinite}
+.status-chip.ordered{background:rgba(96,165,250,.1);color:#60a5fa}
+.status-chip.delivering{background:rgba(167,139,250,.1);color:#a78bfa}
+.status-chip.delivered{background:rgba(52,211,153,.1);color:#34d399}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.oc-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.vblock{display:flex;flex-direction:column;gap:6px}
+.vb-top{display:flex;justify-content:space-between;align-items:baseline}
+.vb-total{font-size:22px;font-weight:900;letter-spacing:-.5px;color:var(--t1)}
+.vb-disc{font-size:11px;font-weight:700;color:#4ade80}
+.vtrack{height:8px;background:var(--track-bg);border-radius:10px;position:relative}
+.vfill{height:100%;border-radius:10px;transition:width .6s cubic-bezier(.4,0,.2,1);position:relative}
+.vfill.grab{background:linear-gradient(90deg,#00b14f,#22c55e)}
+.vfill.shopee{background:linear-gradient(90deg,#ee4d2d,#f97316)}
+.vfill::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:inherit;filter:brightness(1.3);box-shadow:0 0 8px currentColor}
+.vdot{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--s0);border:2px solid var(--border);transition:all .3s}
+.vdot.lit{border-color:#fff;background:var(--grab);box-shadow:0 0 10px rgba(0,177,79,.6)}
+.vdot.lit.shopee{background:var(--shopee);box-shadow:0 0 10px rgba(238,77,45,.6)}
+.vlabels{display:flex;justify-content:space-between}
+.vlabel{font-size:8px;color:var(--t3);font-weight:700;text-align:center;transition:color .3s}
+.vlabel.lit{color:var(--t1)}
+.vnext{font-size:10px;color:var(--t2);text-align:center}.vnext strong{color:var(--t1)}
+.fee-grid{display:grid;grid-template-columns:1fr 1px 1fr;background:var(--s3);border-radius:12px;border:1px solid var(--border)}
+.fee-col{padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.fee-div{background:var(--border)}
+.fee-lbl{font-size:8px;font-weight:700;color:var(--t3);letter-spacing:.5px;text-transform:uppercase}
+.fee-val{font-size:15px;font-weight:900;letter-spacing:-.3px;color:var(--t1)}
+.fee-val.green{color:#4ade80}.fee-val.gold{color:var(--acc)}
+.items-list{background:var(--list-bg);border-radius:12px;overflow:hidden;max-height:130px;overflow-y:auto;border:1px solid var(--border)}
+.item-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--row-border);font-size:10px}
+.item-row:last-child{border-bottom:none}
+.i-av{width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--s3)}
+.i-who{font-weight:700;white-space:nowrap;color:var(--t1)}
+.i-food{color:var(--t2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 5px}
+.i-price{font-weight:800;color:var(--t1);white-space:nowrap}
+.no-items{font-size:10px;color:var(--t3);text-align:center;padding:14px 0;font-weight:600}
+.order-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-ghost{background:var(--s3);border:1px solid var(--border);border-radius:11px;padding:10px 14px;font-size:11px;font-weight:700;color:var(--t2);cursor:pointer;font-family:var(--ff);transition:all .18s;display:flex;align-items:center;gap:5px}
+.btn-ghost:hover{background:rgba(255,80,80,.1);border-color:rgba(255,80,80,.3);color:#ff8080}
+.btn-primary{border:none;border-radius:11px;padding:10px;font-size:12px;font-weight:800;color:#fff;cursor:pointer;font-family:var(--ff);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;flex:1}
+.btn-primary.grab{background:linear-gradient(135deg,var(--grab),var(--grab-d))}
+.btn-primary.shopee{background:linear-gradient(135deg,var(--shopee),var(--shopee-d))}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;filter:none}
+.join-card{background:var(--s2);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow)}
+.jc-strip{height:3px}
+.jc-strip.grab{background:linear-gradient(90deg,var(--grab),#22c55e)}
+.jc-strip.shopee{background:linear-gradient(90deg,var(--shopee),#f97316)}
+.jc-top{padding:14px;display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid var(--row-border)}
+.jc-icon{width:44px;height:44px;border-radius:12px;background:var(--s3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.jc-info{flex:1}
+.jc-rest{font-size:13px;font-weight:800;letter-spacing:-.2px;color:var(--t1)}
+.jc-host{font-size:10px;color:var(--t2);margin-top:3px;display:flex;align-items:center;gap:5px}
+.jc-hav{width:14px;height:14px;border-radius:50%;object-fit:cover;background:var(--s3)}
+.jc-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.jc-fees{display:flex;gap:6px}
+.fee-pill{flex:1;background:var(--s3);border:1px solid var(--border);border-radius:9px;padding:8px 10px}
+.fp-label{font-size:8px;font-weight:700;color:var(--t3);letter-spacing:.4px;text-transform:uppercase;display:block;margin-bottom:2px}
+.fp-val{font-size:13px;font-weight:900;color:var(--t1)}
+.fp-val.green{color:#4ade80}.fp-val.gold{color:var(--acc)}
+.join-btn-main{width:100%;padding:12px;border-radius:12px;border:none;cursor:pointer;font-size:13px;font-weight:800;font-family:var(--ff);display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s;color:#fff}
+.join-btn-main.grab{background:linear-gradient(135deg,var(--grab),var(--grab-d));box-shadow:0 4px 16px rgba(0,177,79,.3)}
+.join-btn-main.shopee{background:linear-gradient(135deg,var(--shopee),var(--shopee-d));box-shadow:0 4px 16px rgba(238,77,45,.3)}
+.join-btn-main:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.join-btn-main:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:none}
+
+/* ══════════════════════════════════════════════════════════
+   NEARBY TAB
+══════════════════════════════════════════════════════════ */
+.nearby-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.radar-hdr{background:linear-gradient(135deg,rgba(59,130,246,.06),rgba(0,177,79,.04));border:1px solid rgba(59,130,246,.15);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px}
+.radar-ico{width:42px;height:42px;border-radius:50%;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;position:relative}
+.radar-ico::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(59,130,246,.3);animation:radarPing 2s ease-out infinite}
+@keyframes radarPing{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.7);opacity:0}}
+.radar-text h4{font-size:12px;font-weight:800;color:var(--t1)}
+.radar-text p{font-size:10px;color:var(--t2);margin-top:2px}
+.radar-count{margin-left:auto;background:var(--blue);color:#fff;font-size:11px;font-weight:800;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nearby-filters{display:flex;gap:5px;overflow-x:auto;flex-shrink:0}
+.nf-chip{background:var(--s3);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:10px;font-weight:700;color:var(--t3);cursor:pointer;white-space:nowrap;transition:all .18s;font-family:var(--ff);flex-shrink:0}
+.nf-chip.on{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.4);color:var(--blue)}
+.nc{background:var(--s2);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .18s;box-shadow:var(--card-shadow)}
+.nc:hover{border-color:var(--border-hi)}
+.nc-top{padding:11px 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--row-border)}
+.nc-logo{width:40px;height:40px;border-radius:10px;background:var(--s3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative}
+.dist-badge{position:absolute;bottom:-5px;right:-5px;background:rgba(59,130,246,.9);color:#fff;font-size:7px;font-weight:800;padding:1px 4px;border-radius:6px;white-space:nowrap}
+.dist-badge.close{background:rgba(0,177,79,.9)}
+.nc-info{flex:1;min-width:0}
+.nc-rest{font-size:12px;font-weight:800;color:var(--t1)}
+.nc-circle{font-size:9px;color:var(--t2);margin-top:2px;display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.nc-plat{font-size:8px;font-weight:800;padding:2px 7px;border-radius:5px}
+.nc-plat.grab{background:rgba(0,177,79,.15);color:#4ade80}
+.nc-plat.shopee{background:rgba(238,77,45,.15);color:#fca5a5}
+.nc-time{font-size:9px;color:var(--acc);font-weight:700}
+.nc-prog{padding:8px 13px;border-bottom:1px solid var(--row-border)}
+.nc-bar-wrap{height:5px;background:var(--track-bg);border-radius:10px}
+.nc-bar{height:100%;border-radius:10px;transition:width .4s}
+.nc-bar.grab{background:linear-gradient(90deg,var(--grab),#22c55e)}
+.nc-bar.shopee{background:linear-gradient(90deg,var(--shopee),#f97316)}
+.nc-prog-row{display:flex;justify-content:space-between;font-size:9px;margin-top:4px}
+.nc-ppl{color:var(--t3)}.nc-ms{color:var(--acc);font-weight:700}
+.nc-actions{padding:10px 12px;display:flex;gap:7px}
+.nc-join{flex:1;padding:9px;border-radius:10px;border:none;cursor:pointer;font-size:11px;font-weight:800;font-family:var(--ff);display:flex;align-items:center;justify-content:center;gap:5px;transition:all .18s;color:#fff}
+.nc-join.grab{background:linear-gradient(135deg,var(--grab),var(--grab-d))}
+.nc-join.shopee{background:linear-gradient(135deg,var(--shopee),var(--shopee-d))}
+.nc-join:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.nc-bell{width:34px;height:34px;border-radius:9px;background:var(--s3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .18s;flex-shrink:0}
+.nc-bell:hover{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.4)}
+.nc-bell.active{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.5)}
+
+/* ══════════════════════════════════════════════════════════
+   ALERTS TAB
+══════════════════════════════════════════════════════════ */
+.alerts-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.alert-settings-card{background:var(--s2);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.asc-title{font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px;margin-bottom:2px;color:var(--t1)}
+.settings-row{display:flex;justify-content:space-between;align-items:center}
+.sr-label{font-size:12px;font-weight:600;color:var(--t2)}
+.sr-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.sw-input{appearance:none;width:42px;height:24px;border-radius:24px;background:var(--s3);border:1px solid var(--border);cursor:pointer;transition:all .2s;position:relative;flex-shrink:0}
+.sw-input::after{content:'';position:absolute;top:4px;left:4px;width:14px;height:14px;border-radius:50%;background:var(--t3);transition:all .2s}
+.sw-input:checked{background:rgba(0,177,79,.25);border-color:var(--grab)}
+.sw-input:checked::after{left:22px;background:var(--grab);box-shadow:0 0 6px rgba(0,177,79,.5)}
+.chip-group{display:flex;gap:6px;flex-wrap:wrap}
+.sm-chip{background:var(--s3);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:10px;font-weight:700;color:var(--t3);cursor:pointer;transition:all .18s;font-family:var(--ff)}
+.sm-chip.on{background:rgba(255,159,28,.08);border-color:rgba(255,159,28,.4);color:var(--acc)}
+.sm-chip.blue.on{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.4);color:var(--blue)}
+.alerts-history-title{font-size:12px;font-weight:800;color:var(--t2)}
+.alert-hist-item{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:center}
+.ahi-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.ahi-icon.grab{background:rgba(0,177,79,.1);border:1px solid rgba(0,177,79,.2)}
+.ahi-icon.shopee{background:rgba(238,77,45,.1);border:1px solid rgba(238,77,45,.2)}
+.ahi-info{flex:1}
+.ahi-title{font-size:12px;font-weight:700;color:var(--t1)}
+.ahi-sub{font-size:10px;color:var(--t2);margin-top:2px}
+
+/* ══════════════════════════════════════════════════════════
+   PROFILE TAB
+══════════════════════════════════════════════════════════ */
+.profile-body{flex:1;overflow-y:auto;padding:0 0 8px}
+.profile-hero{padding:20px 18px 24px;background:var(--s1);display:flex;flex-direction:column;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.prof-av-wrap{position:relative}
+.prof-av{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--acc);box-shadow:0 0 24px rgba(255,159,28,.3);background:var(--s3)}
+.prof-provider-badge{position:absolute;bottom:2px;right:2px;width:22px;height:22px;border-radius:50%;border:2px solid var(--s1);display:flex;align-items:center;justify-content:center;font-size:12px}
+.prof-provider-badge.google{background:#fff}
+.prof-name{font-size:18px;font-weight:900;letter-spacing:-.4px;color:var(--t1)}
+.prof-email{font-size:11px;color:var(--t2);margin-top:-4px}
+.prof-stats{display:flex;gap:0;background:var(--s2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:0 16px}
+.ps-col{flex:1;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.ps-col+.ps-col{border-left:1px solid var(--border)}
+.ps-num{font-size:18px;font-weight:900;letter-spacing:-.3px;color:var(--t1)}
+.ps-lbl{font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.4px;text-align:center}
+.prof-section{padding:14px 16px;display:flex;flex-direction:column;gap:0}
+.prof-section+.prof-section{border-top:1px solid var(--border)}
+.section-label{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.circle-item-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;margin-bottom:6px}
+.circle-item-row:hover{background:var(--s3);border-color:var(--border-hi)}
+.circle-item-row.active{background:rgba(255,159,28,.04);border-color:rgba(255,159,28,.3)}
+.cir-icon{width:36px;height:36px;border-radius:10px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;border:1px solid var(--border)}
+.cir-info{flex:1;min-width:0}
+.cir-name{font-size:12px;font-weight:800;color:var(--t1)}
+.cir-loc{font-size:10px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.add-circle-btn{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px dashed var(--empty-border);border-radius:12px;cursor:pointer;transition:all .18s;color:var(--t3);font-size:12px;font-weight:600;background:transparent;width:100%;font-family:var(--ff)}
+.add-circle-btn:hover{border-color:rgba(255,159,28,.3);color:var(--acc)}
+.settings-link-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--row-border);cursor:pointer;transition:all .15s}
+.settings-link-row:last-child{border-bottom:none}
+.settings-link-row:hover .slr-label{color:var(--t1)}
+.slr-icon{width:34px;height:34px;border-radius:10px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.slr-label{font-size:13px;font-weight:600;color:var(--t2);flex:1}
+.slr-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.slr-chev{color:var(--t3);font-size:14px}
+.slr-val{font-size:11px;color:var(--acc);font-weight:700;margin-right:4px}
+.logout-btn{width:100%;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.2);border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#ff6b6b;cursor:pointer;font-family:var(--ff);transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px}
+.logout-btn:hover{background:rgba(255,80,80,.15);border-color:rgba(255,80,80,.4)}
+
+/* ══════════════════════════════════════════════════════════
+   SETTINGS SCREEN
+══════════════════════════════════════════════════════════ */
+.settings-back-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;flex-shrink:0;background:var(--bar-bg);backdrop-filter:blur(20px);box-shadow:var(--bar-shadow)}
+.sb-back-ico{width:32px;height:32px;border-radius:50%;background:var(--s3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .18s}
+.settings-back-bar:hover .sb-back-ico{background:var(--s4)}
+.sb-back-label{font-size:14px;font-weight:800;color:var(--t1)}
+.settings-body{flex:1;overflow-y:auto;padding:14px 0;display:flex;flex-direction:column;gap:0}
+.sg-section{padding:0 16px 16px;display:flex;flex-direction:column;gap:0}
+.sg-section+.sg-section{border-top:1px solid var(--border);padding-top:16px}
+.sg-title{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;padding-left:2px}
+.sg-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--row-border)}
+.sg-row:last-child{border-bottom:none}
+.sg-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.sg-text{flex:1}
+.sg-text span{font-size:13px;font-weight:600;color:var(--t2);display:block}
+.sg-text small{font-size:10px;color:var(--t3)}
+
+/* ══════════════════════════════════════════════════════════
+   BOTTOM SHEETS & MODALS
+══════════════════════════════════════════════════════════ */
+.sheet-scrim{position:absolute;inset:0;background:var(--scrim);backdrop-filter:blur(4px);z-index:100;display:flex;flex-direction:column;justify-content:flex-end}
+.sheet-box{background:var(--sheet-bg);border-top-left-radius:26px;border-top-right-radius:26px;border-top:1px solid var(--sheet-border);padding:20px 18px 28px;display:flex;flex-direction:column;gap:13px;animation:sheetUp .25s cubic-bezier(.4,0,.2,1)}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh-handle{width:40px;height:4px;background:var(--handle-bg);border-radius:10px;margin:0 auto}
+.sh-title{font-size:16px;font-weight:900;text-align:center;letter-spacing:-.3px;color:var(--t1)}
+.sh-sub{font-size:11px;color:var(--t2);text-align:center;line-height:1.4}
+.link-wrap{position:relative}
+.link-input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);border-radius:13px;padding:13px 46px 13px 14px;color:var(--t1);font-size:12px;font-family:var(--ff);outline:none;transition:all .2s}
+.link-input::placeholder{color:var(--t3)}
+.link-input:focus{border-color:rgba(0,177,79,.5);box-shadow:0 0 0 3px rgba(0,177,79,.1)}
+.link-paste{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;color:var(--t3);transition:color .15s;padding:3px}
+.link-paste:hover{color:var(--acc)}
+.plat-chips{display:flex;gap:7px}
+.plat-chip-btn{flex:1;padding:9px 8px;border-radius:11px;font-size:10px;font-weight:700;cursor:pointer;transition:all .18s;border:1px solid;text-align:center;font-family:var(--ff)}
+.grab-chip{background:rgba(0,177,79,.08);border-color:rgba(0,177,79,.25);color:var(--grab)}
+.grab-chip:hover{background:rgba(0,177,79,.18);border-color:var(--grab)}
+.shopee-chip{background:rgba(238,77,45,.08);border-color:rgba(238,77,45,.25);color:var(--shopee)}
+.shopee-chip:hover{background:rgba(238,77,45,.18);border-color:var(--shopee)}
+.bcast-btn{width:100%;padding:15px;border-radius:15px;border:none;cursor:pointer;font-size:15px;font-weight:900;font-family:var(--ff);background:linear-gradient(135deg,#ff9f1c,#ff6a00);color:#000;box-shadow:0 6px 24px rgba(255,120,0,.4);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s;position:relative;overflow:hidden}
+.bcast-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent)}
+.bcast-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(255,120,0,.5)}
+.bcast-btn:active{transform:translateY(1px)}
+.bcast-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.pulse-ring{position:absolute;inset:-4px;border-radius:19px;border:2px solid rgba(255,159,28,.4);animation:ringPulse 2s ease-out infinite}
+@keyframes ringPulse{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
+.dl-scrim{position:absolute;inset:0;background:var(--scrim);backdrop-filter:blur(4px);z-index:110;display:flex;flex-direction:column;justify-content:flex-end}
+.dl-box{background:var(--sheet-bg);border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid var(--sheet-border);padding:18px 16px 24px;display:flex;flex-direction:column;gap:11px;animation:sheetUp .25s cubic-bezier(.4,0,.2,1)}
+.dl-logo{font-size:32px;text-align:center}
+.dl-title{font-size:15px;font-weight:900;text-align:center;letter-spacing:-.3px;color:var(--t1)}
+.dl-desc{font-size:10px;color:var(--t2);text-align:center;line-height:1.5}
+.menu-list{display:flex;flex-direction:column;gap:4px;max-height:150px;overflow-y:auto}
+.menu-opt{background:var(--s3);border:1px solid var(--border);border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .15s}
+.menu-opt:hover,.menu-opt.sel{background:rgba(255,159,28,.06);border-color:rgba(255,159,28,.4)}
+.mo-name{font-size:12px;font-weight:700;color:var(--t1)}
+.mo-sub{font-size:9px;color:var(--t3);margin-top:1px}
+.mo-price{font-size:13px;font-weight:900;color:var(--acc)}
+.dl-cta{width:100%;padding:13px;border-radius:13px;border:none;cursor:pointer;font-size:13px;font-weight:800;font-family:var(--ff);color:#fff;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s}
+.dl-cta.grab{background:linear-gradient(135deg,var(--grab),var(--grab-d));box-shadow:0 4px 16px rgba(0,177,79,.3)}
+.dl-cta.shopee{background:linear-gradient(135deg,var(--shopee),var(--shopee-d));box-shadow:0 4px 16px rgba(238,77,45,.3)}
+.dl-cta:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.dl-cta:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+.dl-cancel{width:100%;background:transparent;border:1px solid var(--border);border-radius:11px;padding:10px;font-size:11px;font-weight:700;color:var(--t2);cursor:pointer;font-family:var(--ff);transition:all .18s}
+.dl-cancel:hover{background:var(--s3)}
+.cm-scrim{position:absolute;inset:0;background:var(--scrim);backdrop-filter:blur(8px);z-index:150;display:flex;align-items:center;justify-content:center;padding:20px}
+.cm-box{background:var(--sheet-bg);border:1px solid var(--sheet-border);border-radius:22px;width:100%;overflow:hidden;animation:popIn .25s cubic-bezier(.4,0,.2,1);max-height:80%}
+@keyframes popIn{from{transform:scale(.88);opacity:0}to{transform:scale(1);opacity:1}}
+.cm-hdr{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.cm-hdr h3{font-size:15px;font-weight:900;color:var(--t1)}
+.cm-x{background:var(--s3);border:none;color:var(--t2);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.cm-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:65vh}
+.ci-row{background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .18s}
+.ci-row:hover{background:var(--s4);border-color:var(--border-hi)}
+.ci-row.sel{background:rgba(255,159,28,.06);border-color:rgba(255,159,28,.4)}
+.ci-name{font-size:13px;font-weight:800;color:var(--t1)}
+.ci-loc{font-size:10px;color:var(--t2);margin-top:3px}
+.cm-input{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--t1);font-size:12px;font-family:var(--ff);outline:none;margin-bottom:6px;transition:border-color .2s}
+.cm-input:focus{border-color:rgba(255,159,28,.5)}
+.cm-input::placeholder{color:var(--t3)}
+.cm-cta{width:100%;background:linear-gradient(135deg,var(--acc),var(--acc-d));border:none;border-radius:11px;padding:11px;font-size:13px;font-weight:800;color:#000;cursor:pointer;font-family:var(--ff);transition:all .18s}
+.cm-cta:hover{filter:brightness(1.08)}
+.cm-cta:disabled{opacity:.5;cursor:not-allowed}
+
+/* Toast */
+.toast-stack{position:absolute;top:60px;left:50%;transform:translateX(-50%);width:90%;z-index:200;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast-item{background:var(--toast-bg);border:1px solid var(--toast-border);backdrop-filter:blur(16px);border-radius:12px;padding:10px 14px;font-size:11px;font-weight:600;color:#f0f4ff;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:toastSlide 3.5s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes toastSlide{0%{opacity:0;transform:translateY(-10px)}8%{opacity:1;transform:translateY(0)}85%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+@media(max-width:420px){
+  #stage{background:var(--s0)}
+  #phone{--pw:100vw;--ph:100%;--pr:0px;border-radius:0;padding:0;border:none;box-shadow:none}
+  #phone::before{display:none}
+  .ph-notch,.ph-vol,.ph-pwr{display:none}
+  #screen{border-radius:0}
+  .status-bar{display:none!important}
+}
+@media(max-height:860px) and (min-width:421px){
+  #phone{--ph:min(844px,96vh)}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="phone">
+    <div class="ph-notch"></div>
+    <div class="ph-vol"></div>
+    <div class="ph-pwr"></div>
+    <div id="screen"><!-- rendered by JS --></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════
+   FIREBASE CONFIG
+═══════════════════════════════════════════════════════════ */
+const _APP_CONFIG = {
+  apiKey: "AIzaSyC3Bmm0hWmvqT2P1vA1LCCSFCUFFHzm670",
+  authDomain: "gomdon-e8368.firebaseapp.com",
+  projectId: "gomdon-e8368",
+  storageBucket: "gomdon-e8368.firebasestorage.app",
+  messagingSenderId: "566237922304",
+  appId: "1:566237922304:web:724ce262655533e252c4e5",
+  measurementId: "G-6BLW3CK7X3"
+};
+// localStorage override for future config changes
+let FIREBASE_CONFIG = _APP_CONFIG;
+try {
+  const saved = localStorage.getItem('gd_fb_cfg');
+  if (saved) FIREBASE_CONFIG = JSON.parse(saved);
+} catch(e) {}
+
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════════ */
+const MILESTONES = [
+  {spend:150000, label:'GIẢM 20K', pct:33},
+  {spend:300000, label:'GIẢM 45K', pct:66},
+  {spend:500000, label:'GIẢM 75K', pct:100},
+];
+const MENUS = {
+  grab: {emoji:'🍜', restaurant:'GrabFood', items:[
+    {id:'g1', name:'Phở Tái Lăn Đặc Biệt', price:75000},
+    {id:'g2', name:'Bún Bò Huế', price:65000},
+    {id:'g3', name:'Cơm Tấm Sườn Bì Chả', price:60000},
+    {id:'g4', name:'Bánh Mì Ốp La Đặc Biệt', price:35000},
+    {id:'g5', name:'Hủ Tiếu Nam Vang', price:70000},
+  ]},
+  shopeefood: {emoji:'🧋', restaurant:'ShopeeFood', items:[
+    {id:'s1', name:'Trà Sữa Trân Châu Hoàng Kim (L)', price:55000},
+    {id:'s2', name:'Trà Nhãn Lài Nướng', price:50000},
+    {id:'s3', name:'Cà Phê Sữa Đá Việt Nam', price:35000},
+    {id:'s4', name:'Sinh Tố Xoài Sữa', price:45000},
+    {id:'s5', name:'Bánh Mì Pate Thịt Nướng', price:40000},
+  ]},
+};
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════ */
+let currentUser  = null;   // Firebase Auth user
+let userProfile  = null;   // Firestore user document
+let currentCircleId = null;
+let myCircles    = [];
+let circleOrders = [];     // Real-time orders from Firestore
+let nearbyOrders = [];     // GPS-filtered orders
+let userLocation = null;   // {lat, lng}
+let unsubOrders  = null;   // Firestore unsubscribe
+
+// UI state
+let currentTab    = 'home';
+let currentScreen = 'main';
+let nearbyFilter  = 'all';
+let theme         = 'dark';
+
+// Alert settings
+let alertEnabled     = true;
+let alertRadius      = 100;
+let alertTimeWindows = new Set(['lunch']);
+
+// Firebase instances
+let auth, db, googleProvider;
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════ */
+const vnd       = n  => Math.round(n).toLocaleString('vi-VN') + ' đ';
+const nowTime   = () => { const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); };
+const themeIcon = () => theme === 'dark' ? '☀️' : '🌙';
+const firstName = () => currentUser?.displayName?.split(' ').pop() || 'bạn';
+const curCircle = () => myCircles.find(c => c.id === currentCircleId) || myCircles[0] || null;
+const curOrder  = () => circleOrders.find(o => o.status === 'collecting' || o.status === 'ordered' || o.status === 'delivering') || null;
+const voucherPct = total => {
+  if (!total) return 0;
+  if (total >= MILESTONES[2].spend) return 100;
+  for (let i=MILESTONES.length-1; i>=0; i--) {
+    if (total >= MILESTONES[i].spend) {
+      const nx = MILESTONES[i+1];
+      return MILESTONES[i].pct + (total-MILESTONES[i].spend)/(nx.spend-MILESTONES[i].spend)*(nx.pct-MILESTONES[i].pct);
+    }
+  }
+  return (total/MILESTONES[0].spend)*33;
+};
+const unlockedCount = total => MILESTONES.filter(m => total >= m.spend).length;
+const statusVN = s => ({collecting:'Đang Gom Món',ordered:'Đã Chốt Đơn',delivering:'Đang Giao',delivered:'Đã Giao',cancelled:'Đã Hủy'}[s]||s);
+
+function calcDistance(lat1,lng1,lat2,lng2) {
+  if (!lat1||!lat2) return 9999;
+  const R=6371000, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return Math.round(2*R*Math.asin(Math.sqrt(a)));
+}
+const distLabel = m => m < 1000 ? m+'m' : (m/1000).toFixed(1)+'km';
+const detectPlatform = url => (url||'').includes('shopee')||(url||'').includes('now.vn') ? 'shopeefood' : 'grab';
+function genCode(len=6){ return Math.random().toString(36).toUpperCase().slice(2,2+len); }
+function timeAgoVN(ts) {
+  if (!ts) return 'Vừa mở';
+  const t = ts.toDate ? ts.toDate() : new Date(ts);
+  const m = Math.round((Date.now()-t.getTime())/60000);
+  if (m < 1) return 'Vừa mở';
+  if (m < 60) return m+'ph trước';
+  return Math.round(m/60)+'h trước';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST & CONFETTI
+═══════════════════════════════════════════════════════════ */
+function toast(msg) {
+  const scr = document.getElementById('screen');
+  let stack = scr.querySelector('.toast-stack');
+  if (!stack) { stack=document.createElement('div'); stack.className='toast-stack'; scr.appendChild(stack); }
+  const t=document.createElement('div'); t.className='toast-item'; t.textContent=msg;
+  stack.appendChild(t); setTimeout(()=>t.remove(), 3700);
+}
+
+function confetti() {
+  const cols=['#ff9f1c','#00b14f','#fff','#ffef5e','#ff6b6b'];
+  const cvs=document.createElement('canvas');
+  cvs.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:9999;width:100%;height:100%';
+  document.body.appendChild(cvs);
+  const ctx=cvs.getContext('2d'); cvs.width=window.innerWidth; cvs.height=window.innerHeight;
+  const ps=Array.from({length:80},()=>({x:Math.random()*cvs.width,y:-20,vx:(Math.random()-.5)*5,vy:Math.random()*4+2,w:Math.random()*9+3,h:Math.random()*5+2,col:cols[Math.floor(Math.random()*cols.length)],rot:Math.random()*360,spin:(Math.random()-.5)*7,alpha:1}));
+  let f=0;
+  (function draw(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.rot+=p.spin;if(f>55)p.alpha=Math.max(0,p.alpha-.018);
+      ctx.save();ctx.globalAlpha=p.alpha;ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+    if(++f<100)requestAnimationFrame(draw); else cvs.remove();
+  })();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GEOLOCATION
+═══════════════════════════════════════════════════════════ */
+function getUserLocation() {
+  return new Promise((resolve,reject) => {
+    if (!navigator.geolocation) { reject('no-geo'); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => { userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude}; resolve(userLocation); },
+      err => reject(err),
+      {timeout:8000,enableHighAccuracy:true}
+    );
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FIREBASE INIT
+═══════════════════════════════════════════════════════════ */
+function initFirebase() {
+  const app = firebase.initializeApp(FIREBASE_CONFIG);
+  auth = firebase.auth();
+  db   = firebase.firestore();
+  googleProvider = new firebase.auth.GoogleAuthProvider();
+  googleProvider.addScope('profile');
+  googleProvider.addScope('email');
+
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      currentUser = user;
+      renderLoading();
+      try {
+        await loadOrCreateProfile(user);
+        if (myCircles.length === 0) {
+          renderOnboarding();
+        } else {
+          subscribeToOrders();
+          renderApp();
+          // Handle pending invite from URL
+          const pending = sessionStorage.getItem('pending_invite');
+          if (pending) {
+            sessionStorage.removeItem('pending_invite');
+            setTimeout(() => handleInviteCode(pending), 600);
+          }
+        }
+      } catch(e) {
+        toast('❌ Lỗi tải dữ liệu: ' + e.message);
+        renderAuth();
+      }
+    } else {
+      currentUser  = null;
+      userProfile  = null;
+      myCircles    = [];
+      circleOrders = [];
+      cleanupSubs();
+      renderAuth();
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DATA LAYER
+═══════════════════════════════════════════════════════════ */
+async function loadOrCreateProfile(user) {
+  const ref  = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+  if (snap.exists) {
+    userProfile = {id:snap.id, ...snap.data()};
+    const ids   = userProfile.circleIds || [];
+    myCircles   = ids.length ? await loadCircles(ids) : [];
+    currentCircleId = userProfile.lastCircleId || myCircles[0]?.id || null;
+  } else {
+    const data = {
+      name:user.displayName, email:user.email, avatar:user.photoURL,
+      provider:user.providerData[0]?.providerId||'google',
+      circleIds:[], lastCircleId:null,
+      stats:{ordersJoined:0,savedTotal:0},
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    await ref.set(data);
+    userProfile = {id:user.uid, ...data};
+    myCircles   = [];
+  }
+}
+
+async function loadCircles(ids) {
+  if (!ids||!ids.length) return [];
+  const snaps = await Promise.all(ids.map(id=>db.collection('circles').doc(id).get()));
+  return snaps.filter(s=>s.exists).map(s=>({id:s.id,...s.data()}));
+}
+
+async function createCircle(name,location) {
+  const inviteCode = genCode();
+  const ref = await db.collection('circles').add({
+    name, location, memberUids:[currentUser.uid],
+    createdBy:currentUser.uid, inviteCode,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  const cid = ref.id;
+  await db.collection('users').doc(currentUser.uid).update({
+    circleIds:firebase.firestore.FieldValue.arrayUnion(cid),
+    lastCircleId:cid,
+  });
+  const circle = {id:cid,name,location,memberUids:[currentUser.uid],inviteCode};
+  myCircles = [...myCircles, circle];
+  currentCircleId = cid;
+  return circle;
+}
+
+async function joinCircleByCode(code) {
+  const snap = await db.collection('circles').where('inviteCode','==',code.trim().toUpperCase()).get();
+  if (snap.empty) throw new Error('Không tìm thấy nhóm với mã này');
+  const doc = snap.docs[0];
+  const cid = doc.id;
+  if (doc.data().memberUids?.includes(currentUser.uid)) {
+    // Already a member – just switch to it
+    currentCircleId = cid;
+    await db.collection('users').doc(currentUser.uid).update({lastCircleId:cid});
+    const existing = myCircles.find(c=>c.id===cid);
+    if (!existing) myCircles = [...myCircles,{id:cid,...doc.data()}];
+    return myCircles.find(c=>c.id===cid);
+  }
+  await db.collection('circles').doc(cid).update({memberUids:firebase.firestore.FieldValue.arrayUnion(currentUser.uid)});
+  await db.collection('users').doc(currentUser.uid).update({
+    circleIds:firebase.firestore.FieldValue.arrayUnion(cid), lastCircleId:cid,
+  });
+  const circle = {id:cid,...doc.data(),memberUids:[...(doc.data().memberUids||[]),currentUser.uid]};
+  myCircles = [...myCircles.filter(c=>c.id!==cid), circle];
+  currentCircleId = cid;
+  return circle;
+}
+
+async function handleInviteCode(code) {
+  try {
+    const circle = await joinCircleByCode(code);
+    subscribeToOrders();
+    renderApp();
+    toast(`✅ Đã tham gia nhóm: ${circle.name}!`);
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function createOrder(link, platform, lat, lng) {
+  const menu   = MENUS[platform];
+  const circle = curCircle();
+  const data   = {
+    circleId:currentCircleId, circleName:circle?.name||'',
+    hostUid:currentUser.uid, hostName:currentUser.displayName, hostAvatar:currentUser.photoURL,
+    restaurant:menu.restaurant, emoji:menu.emoji, platform, link,
+    status:'collecting', items:[], total:0, fee:35000,
+    lat:lat||null, lng:lng||null,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+    expiresAt:new Date(Date.now()+45*60*1000),
+  };
+  const ref = await db.collection('orders').add(data);
+  return {id:ref.id,...data};
+}
+
+async function joinOrder(orderId, item) {
+  const ref  = db.collection('orders').doc(orderId);
+  const snap = await ref.get();
+  if (!snap.exists) throw new Error('Đơn không tồn tại');
+  const order  = snap.data();
+  const newItem = {uid:currentUser.uid,name:currentUser.displayName,avatar:currentUser.photoURL,itemName:item.name,price:item.price,addedAt:new Date()};
+  const newItems = [...(order.items||[]),newItem];
+  const newTotal = order.total + item.price;
+  await ref.update({items:newItems,total:newTotal});
+  const savedFee = Math.round((order.fee||35000)/(newItems.length+1));
+  await db.collection('users').doc(currentUser.uid).update({
+    'stats.ordersJoined':firebase.firestore.FieldValue.increment(1),
+    'stats.savedTotal':firebase.firestore.FieldValue.increment(savedFee),
+  });
+  userProfile = {...userProfile, stats:{ordersJoined:(userProfile?.stats?.ordersJoined||0)+1,savedTotal:(userProfile?.stats?.savedTotal||0)+savedFee}};
+  return {id:orderId,...order,items:newItems,total:newTotal};
+}
+
+async function updateOrderStatus(orderId, status) {
+  await db.collection('orders').doc(orderId).update({status});
+}
+
+async function cancelOrder(orderId) {
+  await db.collection('orders').doc(orderId).update({status:'cancelled'});
+}
+
+async function loadNearbyOrders() {
+  // Try GPS but don't block if it fails
+  if (!userLocation) {
+    try { await getUserLocation(); } catch(e) { userLocation = null; }
+  }
+  // No orderBy — avoids composite index requirement; sort client-side
+  const snap = await db.collection('orders').where('status','==','collecting').limit(50).get();
+  nearbyOrders = snap.docs
+    .map(doc => {
+      const d = doc.data();
+      const dist = calcDistance(userLocation?.lat, userLocation?.lng, d.lat, d.lng);
+      return {id:doc.id, ...d, dist, distLabel:distLabel(dist), distClass:dist<=50?'close':'mid'};
+    })
+    .filter(o => o.circleId !== currentCircleId)
+    // If we have location, filter by radius; otherwise show everything
+    .filter(o => !userLocation || o.dist <= alertRadius)
+    // Sort by distance if we have location, otherwise by newest (createdAt)
+    .sort((a,b) => userLocation ? a.dist-b.dist : 0);
+  return nearbyOrders;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REAL-TIME SUBSCRIPTIONS
+═══════════════════════════════════════════════════════════ */
+function subscribeToOrders() {
+  cleanupSubs();
+  if (!currentCircleId) return;
+  unsubOrders = db.collection('orders')
+    .where('circleId','==',currentCircleId)
+    .where('status','in',['collecting','ordered','delivering'])
+    .orderBy('createdAt','desc')
+    .onSnapshot(snap => {
+      circleOrders = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+      if (currentScreen === 'main' && currentTab === 'home') {
+        const body = document.getElementById('screenBody');
+        if (body) renderHomeTab(body);
+      }
+    }, err => console.warn('Orders sub:', err.message));
+}
+
+function cleanupSubs() {
+  if (unsubOrders) { unsubOrders(); unsubOrders=null; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH FUNCTIONS
+═══════════════════════════════════════════════════════════ */
+async function signInGoogle() {
+  const btn = document.getElementById('btnGoogle');
+  if (btn) { btn.disabled=true; btn.querySelector('.ab-text').textContent='Đang mở Google…'; }
+  try {
+    await auth.signInWithPopup(googleProvider);
+  } catch(err) {
+    if (btn) { btn.disabled=false; btn.querySelector('.ab-text').textContent='Đăng nhập với Google'; }
+    if (err.code === 'auth/popup-blocked') toast('⚠️ Popup bị chặn. Hãy cho phép popup trong trình duyệt rồi thử lại.');
+    else if (err.code !== 'auth/popup-closed-by-user') toast('❌ '+err.message);
+  }
+}
+
+async function signOutUser() {
+  if (!confirm('Đăng xuất khỏi Gom Đơn?')) return;
+  cleanupSubs();
+  await auth.signOut();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER: SETUP SCREEN
+═══════════════════════════════════════════════════════════ */
+function renderSetupScreen() {
+  const scr = document.getElementById('screen');
+  scr.innerHTML = `
+  <div class="setup-screen">
+    <div class="setup-hero">
+      <div class="setup-fire">🔥</div>
+      <div class="setup-title">Kết Nối Firebase</div>
+      <div class="setup-sub">Gom Đơn cần Firebase để đăng nhập thực và lưu dữ liệu. Miễn phí hoàn toàn.</div>
+    </div>
+    <div class="setup-body">
+      <div class="setup-steps">
+        <div class="ss-step"><span class="ss-num">1</span><div><b>Tạo Firebase Project miễn phí</b><a class="ss-link" href="https://console.firebase.google.com" target="_blank">console.firebase.google.com ↗</a></div></div>
+        <div class="ss-step"><span class="ss-num">2</span><div><b>Authentication → Sign-in method → Google</b>Bật Google Sign-In, lưu lại</div></div>
+        <div class="ss-step"><span class="ss-num">3</span><div><b>Firestore Database → Create database</b>Chọn "Start in test mode" → Next → Done</div></div>
+        <div class="ss-step"><span class="ss-num">4</span><div><b>Project Settings → Your apps → Web app (⊕)</b>Sao chép đoạn <code>firebaseConfig = { … }</code></div></div>
+      </div>
+      <div class="ss-divider">Dán config JSON của bạn vào đây</div>
+      <textarea id="configPaste" class="ss-textarea" placeholder='{"apiKey":"AIza…","authDomain":"your-app.firebaseapp.com","projectId":"your-app","storageBucket":"your-app.appspot.com","messagingSenderId":"12345","appId":"1:12345:web:abc"}'></textarea>
+      <button class="ss-btn" id="saveConfigBtn">🚀 Kết Nối &amp; Bắt Đầu</button>
+      <div class="ss-error" id="ssError" style="display:none"></div>
+      <div style="font-size:9px;color:var(--t3);text-align:center;line-height:1.5">Config được lưu cục bộ trong trình duyệt của bạn.<br>Cần HTTPS để Google Sign-In hoạt động – hãy deploy lên Netlify.</div>
+    </div>
+  </div>`;
+
+  document.getElementById('saveConfigBtn').onclick = () => {
+    const err = document.getElementById('ssError');
+    err.style.display = 'none';
+    try {
+      let raw = document.getElementById('configPaste').value.trim();
+      // Allow JS object literal (strip assignment if present)
+      raw = raw.replace(/^const\s+firebaseConfig\s*=\s*/, '').replace(/;$/, '').trim();
+      const cfg = JSON.parse(raw);
+      if (!cfg.apiKey||!cfg.projectId) throw new Error('Thiếu apiKey hoặc projectId');
+      localStorage.setItem('gd_fb_cfg', JSON.stringify(cfg));
+      location.reload();
+    } catch(e) {
+      err.textContent = '❌ '+e.message+' – Hãy dán đúng định dạng JSON';
+      err.style.display = 'block';
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER: LOADING
+═══════════════════════════════════════════════════════════ */
+function renderLoading() {
+  document.getElementById('screen').innerHTML = `
+  <div class="loading-screen">
+    <div style="font-size:40px">🍜</div>
+    <div style="font-size:13px;color:var(--t2);font-weight:600">Đang tải dữ liệu…</div>
+    <div class="loading-dots"><span></span><span></span><span></span></div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER: AUTH SCREEN
+═══════════════════════════════════════════════════════════ */
+function renderAuth() {
+  const scr = document.getElementById('screen');
+  scr.innerHTML = `
+  <div class="auth-screen">
+    <button class="auth-theme-btn" id="authThemeBtn">${themeIcon()}</button>
+    <div class="auth-hero">
+      <div class="auth-orb1"></div><div class="auth-orb2"></div><div class="auth-orb3"></div>
+      <div class="auth-app-icon">🍜</div>
+      <div class="auth-app-name">Gom Đơn</div>
+      <div class="auth-tagline">Đặt cùng nhau, tiết kiệm phí ship cùng nhau 🎉</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-card-title">Bắt đầu ngay</div>
+      <div class="auth-card-sub">Đăng nhập bằng tài khoản Google để tạo nhóm gom đơn và chia sẻ phí ship với bạn bè, đồng nghiệp</div>
+      <button class="auth-btn google" id="btnGoogle">
+        <div class="ab-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg></div>
+        <div class="ab-text">Đăng nhập với Google<small>Sử dụng tài khoản Google của bạn</small></div>
+        <span style="color:var(--t3);font-size:16px">›</span>
+      </button>
+      <div class="auth-divider">đăng nhập bảo mật bởi Google</div>
+      <div class="auth-terms">Bằng cách đăng nhập, bạn đồng ý với <span>Điều khoản dịch vụ</span> và <span>Chính sách bảo mật</span> của Gom Đơn.</div>
+    </div>
+  </div>`;
+  document.getElementById('btnGoogle').onclick    = signInGoogle;
+  document.getElementById('authThemeBtn').onclick = toggleTheme;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER: ONBOARDING (first sign-in, no circles yet)
+═══════════════════════════════════════════════════════════ */
+function renderOnboarding() {
+  const scr = document.getElementById('screen');
+  scr.innerHTML = `
+  <div class="status-bar"><span class="sb-time">${nowTime()}</span><span class="sb-icons">📶 5G 🔋</span></div>
+  <div style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:16px;">
+    <div style="text-align:center;padding:16px 0 8px">
+      <div style="font-size:44px;margin-bottom:10px">👋</div>
+      <h2 style="font-size:20px;font-weight:900;letter-spacing:-.4px;color:var(--t1)">Chào ${firstName()}!</h2>
+      <p style="font-size:11px;color:var(--t2);margin-top:6px;line-height:1.5">Tạo nhóm mới hoặc nhập mã mời để tham gia nhóm của bạn bè</p>
+    </div>
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:13px;font-weight:800;color:var(--t1)">🏢 Tạo nhóm mới</div>
+      <input id="obName" class="cm-input" placeholder="Tên nhóm (vd: Dev Team Tầng 5, KTX B10 Phòng 402)" style="margin-bottom:0">
+      <input id="obLoc" class="cm-input" placeholder="Địa chỉ giao hàng (vd: Phòng 502, Tòa A, Keangnam)" style="margin-bottom:0">
+      <button class="bcast-btn" id="obCreate" style="font-size:13px;padding:13px">
+        <div class="pulse-ring"></div>
+        <span>✨ Tạo Nhóm Gom Đơn</span>
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;color:var(--t3);font-size:10px;font-weight:700">
+      <div style="flex:1;height:1px;background:var(--border)"></div>HOẶC<div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:13px;font-weight:800;color:var(--t1)">🔗 Tham gia nhóm có sẵn</div>
+      <div style="display:flex;gap:8px">
+        <input id="obCode" class="cm-input" placeholder="Nhập mã mời 6 ký tự (vd: AB1C2D)" style="margin-bottom:0;flex:1;text-transform:uppercase;letter-spacing:2px">
+        <button class="es-cta" id="obJoin" style="padding:10px 14px;font-size:12px;white-space:nowrap;border-radius:10px">Tham Gia</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast-stack"></div>`;
+
+  document.getElementById('obCreate').onclick = async () => {
+    const name = document.getElementById('obName').value.trim();
+    const loc  = document.getElementById('obLoc').value.trim();
+    if (!name||!loc) { toast('⚠️ Vui lòng nhập đủ tên nhóm và địa chỉ'); return; }
+    const btn = document.getElementById('obCreate');
+    btn.disabled=true; btn.querySelector('span').textContent='⏳ Đang tạo…';
+    try {
+      const circle = await createCircle(name, loc);
+      subscribeToOrders(); renderApp();
+      setTimeout(()=>toast(`🎉 Đã tạo nhóm: ${circle.name}! Mã mời: ${circle.inviteCode}`), 300);
+    } catch(e) {
+      btn.disabled=false; btn.querySelector('span').textContent='✨ Tạo Nhóm Gom Đơn';
+      toast('❌ '+e.message);
+    }
+  };
+
+  document.getElementById('obJoin').onclick = async () => {
+    const code = document.getElementById('obCode').value.trim();
+    if (!code) { toast('⚠️ Nhập mã mời'); return; }
+    const btn = document.getElementById('obJoin');
+    btn.disabled=true; btn.textContent='⏳…';
+    try {
+      const circle = await joinCircleByCode(code);
+      subscribeToOrders(); renderApp();
+      setTimeout(()=>toast(`✅ Đã tham gia nhóm: ${circle.name}!`), 300);
+    } catch(e) {
+      btn.disabled=false; btn.textContent='Tham Gia';
+      toast('❌ '+e.message);
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER: MAIN APP SHELL
+═══════════════════════════════════════════════════════════ */
+function renderApp() {
+  if (!currentUser) { renderAuth(); return; }
+  if (currentScreen === 'settings') { renderSettings(document.getElementById('screen')); return; }
+  const circle = curCircle();
+  const scr    = document.getElementById('screen');
+
+  scr.innerHTML = `
+    <div class="status-bar">
+      <span class="sb-time">${nowTime()}</span>
+      <span class="sb-icons">📶 5G 🔋</span>
+    </div>
+    <div class="app-bar">
+      <div class="bar-brand">
+        <div class="bar-logo">🍜</div>
+        <span class="bar-title">Gom Đơn</span>
+      </div>
+      <div class="bar-right">
+        <div class="bar-circle-pill" id="circleBtn">
+          <div class="bar-circle-dot"></div>
+          <span>${circle?.name||'Chọn nhóm'}</span>
+        </div>
+        <button class="bar-theme-toggle" id="themeToggleBtn">${themeIcon()}</button>
+        <div class="bar-notif" id="notifBtn">
+          🔔<div class="bar-notif-dot"></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-body" id="screenBody"></div>
+    <nav class="bottom-nav">
+      <button class="nav-item ${currentTab==='home'?'on':''}" data-tab="home"><span class="ni-icon">🏠</span><span class="ni-label">Nhóm</span></button>
+      <button class="nav-item ${currentTab==='nearby'?'on':''}" data-tab="nearby"><span class="ni-icon">📍</span><span class="ni-label">Gần Đây</span></button>
+      <button class="nav-fab" id="fabCreate">＋</button>
+      <button class="nav-item ${currentTab==='alerts'?'on':''}" data-tab="alerts"><span class="ni-icon">🔔</span><span class="ni-label">Cảnh Báo</span></button>
+      <button class="nav-item ${currentTab==='profile'?'on':''}" data-tab="profile"><span class="ni-icon">👤</span><span class="ni-label">Tôi</span></button>
+    </nav>
+    <div class="toast-stack"></div>`;
+
+  scr.querySelectorAll('.nav-item[data-tab]').forEach(btn=>{
+    btn.onclick=()=>{ currentTab=btn.dataset.tab; renderApp(); };
+  });
+  scr.querySelector('#fabCreate').onclick    = showCreateSheet;
+  scr.querySelector('#circleBtn').onclick    = showCircleModal;
+  scr.querySelector('#themeToggleBtn').onclick = toggleTheme;
+  scr.querySelector('#notifBtn').onclick     = ()=>{ currentTab='alerts'; renderApp(); };
+
+  const body = scr.querySelector('#screenBody');
+  if      (currentTab==='home')    renderHomeTab(body);
+  else if (currentTab==='nearby')  renderNearbyTab(body);
+  else if (currentTab==='alerts')  renderAlertsTab(body);
+  else if (currentTab==='profile') renderProfileTab(body);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOME TAB
+═══════════════════════════════════════════════════════════ */
+function renderHomeTab(body) {
+  body.className = 'home-body';
+  const order  = curOrder();
+  const isHost = order && order.hostUid === currentUser?.uid;
+  body.innerHTML = `
+    <div class="greeting-row">
+      <div class="greeting-text">
+        <h2>Hôm nay ăn gì? 🍜</h2>
+        <p>Xin chào, ${firstName()}!</p>
+      </div>
+      <img class="greeting-avatar" src="${currentUser?.photoURL||''}" id="avatarBtn" onerror="this.style.display='none'" alt="">
+    </div>
+    <div id="homeContent"></div>`;
+  body.querySelector('#avatarBtn')?.addEventListener('click',()=>{ currentTab='profile'; renderApp(); });
+  const content = body.querySelector('#homeContent');
+  if (!order) {
+    content.innerHTML = `
+      <div class="empty-state">
+        <div class="es-icon">🍽️</div>
+        <div class="es-title">${curCircle()?.name||'Nhóm'} chưa có đơn gom</div>
+        <div class="es-desc">Hãy mở đơn để mọi người cùng order tiết kiệm phí ship hôm nay!</div>
+        <button class="es-cta" id="esCta">📢 Tạo Đơn Gom Ngay</button>
+        <span class="es-link" id="esNearby">📍 Xem đơn gần đây →</span>
+      </div>`;
+    content.querySelector('#esCta').onclick  = showCreateSheet;
+    content.querySelector('#esNearby').onclick = ()=>{ currentTab='nearby'; renderApp(); };
+  } else if (isHost) {
+    renderHostCard(content, order);
+  } else {
+    renderMemberCard(content, order);
+  }
+}
+
+function renderHostCard(container, order) {
+  const pct  = voucherPct(order.total);
+  const ul   = unlockedCount(order.total);
+  const ppl  = (order.items||[]).length + 1;
+  const split= Math.round(order.fee/ppl);
+  const saved= order.fee - split;
+  const nextM= MILESTONES[ul];
+  const isSh = order.platform === 'shopeefood';
+  container.innerHTML = `
+    <div class="order-card">
+      <div class="oc-header ${isSh?'shopee-bg':'grab-bg'}">
+        <div class="oc-icon">${order.emoji}</div>
+        <div class="oc-info">
+          <div class="oc-rest">${order.restaurant}</div>
+          <div class="oc-sub">${order.circleName||curCircle()?.name||''} · ${ppl} người</div>
+          <div style="margin-top:5px"><span class="status-chip ${order.status}">${statusVN(order.status)}</span></div>
+        </div>
+        <span class="oc-plat ${isSh?'shopeefood':'grab'}">${isSh?'SHOPEE':'GRAB'}</span>
+      </div>
+      <div class="oc-body">
+        <div class="vblock">
+          <div class="vb-top">
+            <span class="vb-total">${vnd(order.total)}</span>
+            <span class="vb-disc">${ul>0?'🎉 '+MILESTONES[ul-1].label:''}</span>
+          </div>
+          <div class="vtrack">
+            <div class="vfill ${isSh?'shopee':'grab'}" style="width:${pct}%"></div>
+            ${MILESTONES.map(m=>`<div class="vdot ${order.total>=m.spend?'lit':''}${isSh?' shopee':''}" style="left:${m.pct}%"></div>`).join('')}
+          </div>
+          <div class="vlabels">${MILESTONES.map(m=>`<span class="vlabel ${order.total>=m.spend?'lit':''}">${m.label}</span>`).join('')}</div>
+          <div class="vnext">${nextM?`Cần thêm <strong>${vnd(nextM.spend-order.total)}</strong> để ${nextM.label}`:'🏆 Đã đạt ưu đãi tối đa!'}</div>
+        </div>
+        <div class="fee-grid">
+          <div class="fee-col"><span class="fee-lbl">Ship / người</span><span class="fee-val green">${vnd(split)}</span></div>
+          <div class="fee-div"></div>
+          <div class="fee-col"><span class="fee-lbl">Tiết kiệm</span><span class="fee-val gold">↓ ${vnd(saved)}</span></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:11px;font-weight:800;color:var(--t1)">🛒 Giỏ hàng (${ppl})</span>
+          <span style="font-size:11px;color:var(--t2)">${vnd(order.total)}</span>
+        </div>
+        <div class="items-list">
+          <div class="item-row"><img class="i-av" src="${order.hostAvatar||''}" onerror="this.style.display='none'" alt=""><span class="i-who">${order.hostName}</span><span class="i-food">Chủ đơn 👑</span><span class="i-price">–</span></div>
+          ${(order.items||[]).length===0
+            ?'<div class="no-items">Đang chờ mọi người thêm món…</div>'
+            :(order.items||[]).map(it=>`<div class="item-row"><img class="i-av" src="${it.avatar||''}" onerror="this.style.display='none'" alt=""><span class="i-who">${it.name.split(' ').pop()}</span><span class="i-food">${it.itemName}</span><span class="i-price">${vnd(it.price)}</span></div>`).join('')}
+        </div>
+        <div class="order-actions">
+          ${order.status==='collecting'?`<button class="btn-primary ${isSh?'shopee':'grab'}" id="placeBtn">🛒 Chốt &amp; Đặt trên ${isSh?'Shopee':'Grab'}</button>`:''}
+          ${order.status==='ordered'?`<button class="btn-primary grab" id="delBtn">🛵 Đánh dấu Đang Giao</button>`:''}
+          ${order.status==='delivering'?`<button class="btn-primary grab" id="doneBtn">✅ Đã Giao Tới Nơi</button>`:''}
+          <button class="btn-ghost" id="cancelBtn">🗑️</button>
+        </div>
+        <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:2px" id="shareBtn">🔗 Chia sẻ đơn cho nhóm</button>
+      </div>
+    </div>`;
+
+  const advance = (id,status,confirm_msg,done_cb) => {
+    container.querySelector(`#${id}`)?.addEventListener('click',async()=>{
+      if (confirm_msg && !confirm(confirm_msg)) return;
+      const btn=container.querySelector(`#${id}`); btn.disabled=true;
+      try { await updateOrderStatus(order.id,status); if(done_cb) done_cb(); }
+      catch(e) { toast('❌ '+e.message); btn.disabled=false; }
+    });
+  };
+  advance('placeBtn','ordered',null,()=>toast('✅ Đã chốt đơn! Giờ đặt trên app.'));
+  advance('delBtn','delivering',null,()=>toast('🛵 Đang giao hàng…'));
+  advance('doneBtn','delivered',null,()=>{ toast('🎉 Đã giao thành công!'); setTimeout(confetti,300); });
+  container.querySelector('#cancelBtn')?.addEventListener('click',async()=>{
+    if (!confirm('Hủy đơn gom này?')) return;
+    await cancelOrder(order.id); toast('❌ Đã hủy đơn gom');
+  });
+  container.querySelector('#shareBtn')?.addEventListener('click',()=>{
+    const circle=curCircle();
+    const msg=`🍜 ${order.hostName} mở đơn gom tại ${order.restaurant}!\nTham gia link: ${order.link||location.href}\nMã nhóm: ${circle?.inviteCode||''}`;
+    if (navigator.share) navigator.share({title:'Gom Đơn',text:msg});
+    else { navigator.clipboard?.writeText(msg); toast('📋 Đã sao chép thông tin đơn!'); }
+  });
+}
+
+function renderMemberCard(container, order) {
+  const pct  = voucherPct(order.total);
+  const ul   = unlockedCount(order.total);
+  const ppl  = (order.items||[]).length + 1;
+  const split= Math.round(order.fee/ppl);
+  const saved= order.fee - split;
+  const nextM= MILESTONES[ul];
+  const isSh = order.platform === 'shopeefood';
+  const can  = order.status === 'collecting';
+  const alreadyJoined = (order.items||[]).some(it=>it.uid===currentUser?.uid);
+  container.innerHTML = `
+    <div class="join-card">
+      <div class="jc-strip ${isSh?'shopee':'grab'}"></div>
+      <div class="jc-top">
+        <div class="jc-icon">${order.emoji}</div>
+        <div class="jc-info">
+          <div class="jc-rest">${order.restaurant}</div>
+          <div class="jc-host">
+            <img class="jc-hav" src="${order.hostAvatar||''}" onerror="this.style.display='none'" alt="">
+            ${order.hostName.split(' ').pop()} mở đơn · ${ppl} người
+          </div>
+        </div>
+        <span class="status-chip ${order.status}">${statusVN(order.status)}</span>
+      </div>
+      <div class="jc-body">
+        <div class="vblock">
+          <div class="vtrack">
+            <div class="vfill ${isSh?'shopee':'grab'}" style="width:${pct}%"></div>
+            ${MILESTONES.map(m=>`<div class="vdot ${order.total>=m.spend?'lit':''}${isSh?' shopee':''}" style="left:${m.pct}%"></div>`).join('')}
+          </div>
+          <div class="vlabels">${MILESTONES.map(m=>`<span class="vlabel ${order.total>=m.spend?'lit':''}">${m.label}</span>`).join('')}</div>
+          <div class="vnext">${nextM&&can?`Góp thêm <strong>${vnd(nextM.spend-order.total)}</strong> để ${nextM.label}`:ul>0?`🎉 Đã mở <strong>${MILESTONES[ul-1].label}</strong>!`:''}</div>
+        </div>
+        <div class="jc-fees">
+          <div class="fee-pill"><span class="fp-label">Ship / người</span><span class="fp-val green">${vnd(split)}</span></div>
+          <div class="fee-pill"><span class="fp-label">Tiết kiệm</span><span class="fp-val gold">↓ ${vnd(saved)}</span></div>
+        </div>
+        ${alreadyJoined
+          ?`<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:10px;font-size:11px;font-weight:700;color:#34d399;text-align:center">✅ Bạn đã thêm món vào đơn này</div>`
+          :`<button class="join-btn-main ${isSh?'shopee':'grab'}" id="joinNow" ${can?'':'disabled'}>${can?'🍜 Chọn Món & Tham Gia':'🔒 Đơn Đã Đóng'}</button>`
+        }
+      </div>
+    </div>`;
+  if (!alreadyJoined && can) {
+    container.querySelector('#joinNow')?.addEventListener('click',()=>showDeepLink(order));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NEARBY TAB
+═══════════════════════════════════════════════════════════ */
+async function renderNearbyTab(body) {
+  body.className = 'nearby-body';
+  body.innerHTML = `
+    <div class="radar-hdr">
+      <div class="radar-ico">📡</div>
+      <div class="radar-text"><h4>Đang tìm đơn…</h4><p>Đang kết nối Firebase</p></div>
+      <div class="radar-count">…</div>
+    </div>
+    <div style="text-align:center;padding:40px;color:var(--t3);font-size:11px">Đang tải…</div>`;
+  try {
+    await loadNearbyOrders();
+    displayNearby(body);
+  } catch(e) {
+    // Show a friendly error with retry button instead of raw message
+    body.className = 'nearby-body';
+    body.innerHTML = `
+      <div class="radar-hdr" style="border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.04)">
+        <div class="radar-ico" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25)">⚠️</div>
+        <div class="radar-text">
+          <h4 style="color:var(--t1)">Không tải được đơn</h4>
+          <p>${e.message && e.message.includes('index') ? 'Firestore đang chuẩn bị — thử lại sau vài giây' : (e.message||'Lỗi kết nối')}</p>
+        </div>
+      </div>
+      <button class="bcast-btn" style="margin-top:4px;font-size:13px" onclick="currentTab='nearby';renderApp()">🔄 Thử lại</button>`;
+  }
+}
+
+function displayNearby(body) {
+  const filtered = nearbyOrders.filter(o=>{
+    if (nearbyFilter==='grab')   return o.platform==='grab';
+    if (nearbyFilter==='shopee') return o.platform==='shopeefood';
+    return true;
+  });
+  body.innerHTML = `
+    <div class="radar-hdr">
+      <div class="radar-ico">📡</div>
+      <div class="radar-text"><h4>Đơn gom trong ${alertRadius}m</h4><p>${filtered.length} đơn đang mở${userLocation?'':' (vị trí chưa xác định)'}</p></div>
+      <div class="radar-count">${filtered.length}</div>
+    </div>
+    <div class="nearby-filters">
+      <button class="nf-chip ${nearbyFilter==='all'?'on':''}" data-f="all">🗂️ Tất cả</button>
+      <button class="nf-chip ${nearbyFilter==='grab'?'on':''}" data-f="grab">🍜 GrabFood</button>
+      <button class="nf-chip ${nearbyFilter==='shopee'?'on':''}" data-f="shopee">🧋 ShopeeFood</button>
+    </div>
+    <div id="nbList">
+      ${filtered.length===0
+        ?`<div class="empty-state" style="min-height:160px"><div class="es-icon">📡</div><div class="es-title">Không có đơn trong ${alertRadius}m</div><div class="es-desc">Tăng bán kính tìm kiếm hoặc chờ bạn bè mở đơn mới.</div></div>`
+        :filtered.map(o=>buildNearbyCard(o)).join('')
+      }
+    </div>`;
+  body.querySelectorAll('.nf-chip').forEach(c=>{
+    c.onclick=()=>{ nearbyFilter=c.dataset.f; displayNearby(body); };
+  });
+  body.querySelectorAll('.nc-join').forEach(btn=>{
+    btn.onclick=()=>{ const o=nearbyOrders.find(n=>n.id===btn.dataset.id); if(o) showDeepLink(o); };
+  });
+  body.querySelectorAll('.nc-bell').forEach(btn=>{
+    btn.onclick=()=>{
+      const o=nearbyOrders.find(n=>n.id===btn.dataset.id); if(!o) return;
+      o._alert=!o._alert; btn.textContent=o._alert?'🔔':'🔕'; btn.classList.toggle('active',o._alert);
+      toast(o._alert?`🔔 Bật cảnh báo cho ${o.restaurant}`:'🔕 Tắt cảnh báo');
+    };
+  });
+}
+
+function buildNearbyCard(o) {
+  const pct  = voucherPct(o.total||0);
+  const nextM= MILESTONES[unlockedCount(o.total||0)];
+  const ppl  = (o.items||[]).length+1;
+  const sf   = Math.round((o.fee||35000)/ppl);
+  const isSh = o.platform==='shopeefood';
+  return `<div class="nc">
+    <div class="nc-top">
+      <div class="nc-logo">${o.emoji||'🍜'}<span class="dist-badge ${o.distClass||'mid'}">${o.distLabel||'?'}</span></div>
+      <div class="nc-info">
+        <div class="nc-rest">${o.restaurant}</div>
+        <div class="nc-circle"><span style="width:5px;height:5px;border-radius:50%;background:var(--blue);display:inline-block;flex-shrink:0"></span>&nbsp;${o.hostName?.split(' ').pop()||''} · ${o.circleName||'Nhóm khác'}</div>
+      </div>
+      <div class="nc-right">
+        <span class="nc-plat ${isSh?'shopee':'grab'}">${isSh?'SHOPEE':'GRAB'}</span>
+        <span class="nc-time">⏱ ${timeAgoVN(o.createdAt)}</span>
+      </div>
+    </div>
+    <div class="nc-prog">
+      <div class="nc-bar-wrap"><div class="nc-bar ${isSh?'shopee':'grab'}" style="width:${pct}%"></div></div>
+      <div class="nc-prog-row"><span class="nc-ppl">👥 ${ppl} người · ${vnd(o.total||0)}</span><span class="nc-ms">${nextM?'→ '+nextM.label:'🏆 Max ưu đãi'}</span></div>
+    </div>
+    <div class="nc-actions">
+      <button class="nc-join ${isSh?'shopee':'grab'}" data-id="${o.id}">🍜 Tham Gia · Ship ${vnd(sf)}/người</button>
+      <div class="nc-bell ${o._alert?'active':''}" data-id="${o.id}">${o._alert?'🔔':'🔕'}</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ALERTS TAB
+═══════════════════════════════════════════════════════════ */
+function renderAlertsTab(body) {
+  body.className = 'alerts-body';
+  body.innerHTML = `
+    <div class="alert-settings-card">
+      <div class="asc-title">📡 Cài Đặt Cảnh Báo</div>
+      <div class="settings-row">
+        <div><div class="sr-label">Bật cảnh báo đơn gom</div><div class="sr-sub">Nhận thông báo khi có đơn gần bạn</div></div>
+        <input type="checkbox" class="sw-input" id="alertToggle" ${alertEnabled?'checked':''}>
+      </div>
+      <div>
+        <div class="sr-label" style="margin-bottom:8px">Bán kính tìm kiếm</div>
+        <div class="chip-group">
+          <button class="sm-chip blue ${alertRadius===50?'on':''}" data-r="50">📡 50m</button>
+          <button class="sm-chip blue ${alertRadius===100?'on':''}" data-r="100">📡 100m</button>
+          <button class="sm-chip blue ${alertRadius===200?'on':''}" data-r="200">📡 200m</button>
+          <button class="sm-chip blue ${alertRadius===500?'on':''}" data-r="500">📡 500m</button>
+        </div>
+      </div>
+      <div>
+        <div class="sr-label" style="margin-bottom:8px">Khung giờ cảnh báo</div>
+        <div class="chip-group">
+          <button class="sm-chip ${alertTimeWindows.has('morning')?'on':''}" data-tw="morning">🌅 7–9h</button>
+          <button class="sm-chip ${alertTimeWindows.has('lunch')?'on':''}" data-tw="lunch">☀️ 11–13h</button>
+          <button class="sm-chip ${alertTimeWindows.has('dinner')?'on':''}" data-tw="dinner">🌆 17–19h</button>
+          <button class="sm-chip ${alertTimeWindows.has('allday')?'on':''}" data-tw="allday">🕐 Cả ngày</button>
+        </div>
+      </div>
+    </div>
+    <div class="alerts-history-title">Ghi chú</div>
+    <div class="alert-hist-item"><div class="ahi-icon grab">📡</div><div class="ahi-info"><div class="ahi-title">Dữ liệu thực từ Firebase</div><div class="ahi-sub">Các đơn gần đây đều là đơn thật từ người dùng thật trong bán kính của bạn.</div></div></div>
+    <div class="alert-hist-item"><div class="ahi-icon shopee">📍</div><div class="ahi-info"><div class="ahi-title">Vị trí GPS</div><div class="ahi-sub">Cấp quyền vị trí để tìm đơn gom chính xác. Vị trí không được lưu lên server.</div></div></div>`;
+  body.querySelector('#alertToggle').onchange=e=>{ alertEnabled=e.target.checked; toast(alertEnabled?'🔔 Cảnh báo bật':'🔕 Cảnh báo tắt'); };
+  body.querySelectorAll('[data-r]').forEach(btn=>{
+    btn.onclick=()=>{ alertRadius=+btn.dataset.r; body.querySelectorAll('[data-r]').forEach(b=>b.classList.toggle('on',+b.dataset.r===alertRadius)); toast(`📡 Bán kính: ${alertRadius}m`); };
+  });
+  body.querySelectorAll('[data-tw]').forEach(btn=>{
+    btn.onclick=()=>{ const tw=btn.dataset.tw; if(alertTimeWindows.has(tw))alertTimeWindows.delete(tw); else alertTimeWindows.add(tw); btn.classList.toggle('on',alertTimeWindows.has(tw)); };
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROFILE TAB
+═══════════════════════════════════════════════════════════ */
+function renderProfileTab(body) {
+  body.className = 'profile-body';
+  const u      = currentUser;
+  const prof   = userProfile;
+  const circle = curCircle();
+  body.innerHTML = `
+    <div class="profile-hero">
+      <div class="prof-av-wrap">
+        <img class="prof-av" src="${u?.photoURL||''}" onerror="this.style.display='none'" alt="">
+        <div class="prof-provider-badge google"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg></div>
+      </div>
+      <div class="prof-name">${u?.displayName||''}</div>
+      <div class="prof-email">${u?.email||''}</div>
+    </div>
+    <div class="prof-stats" style="margin-top:14px">
+      <div class="ps-col"><div class="ps-num">${prof?.stats?.ordersJoined||0}</div><div class="ps-lbl">Đơn đã gom</div></div>
+      <div class="ps-col"><div class="ps-num">${prof?.stats?.savedTotal>=1000?Math.round((prof.stats.savedTotal||0)/1000)+'k':vnd(prof?.stats?.savedTotal||0)}</div><div class="ps-lbl">Tiết kiệm</div></div>
+      <div class="ps-col"><div class="ps-num">${myCircles.length}</div><div class="ps-lbl">Nhóm</div></div>
+    </div>
+    <div class="prof-section" style="padding-top:14px">
+      <div class="section-label">Nhóm của tôi</div>
+      ${myCircles.map(c=>`
+        <div class="circle-item-row ${c.id===currentCircleId?'active':''}" data-cid="${c.id}">
+          <div class="cir-icon">🏢</div>
+          <div class="cir-info"><div class="cir-name">${c.name}</div><div class="cir-loc">${c.location||''}</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+            ${c.id===currentCircleId?'<span style="font-size:9px;color:var(--grab);font-weight:700">✓ Đang chọn</span>':''}
+            ${c.inviteCode?`<span class="code-copy" data-code="${c.inviteCode}" style="font-size:9px;color:var(--acc);font-weight:800;cursor:pointer;letter-spacing:1px">📋 ${c.inviteCode}</span>`:''}
+          </div>
+        </div>`).join('')}
+      <button class="add-circle-btn" id="addCircleBtn">＋ &nbsp;Tham gia hoặc tạo nhóm mới</button>
+    </div>
+    <div class="prof-section">
+      <div class="section-label">Tài khoản</div>
+      <div class="settings-link-row" id="goSettings">
+        <div class="slr-icon" style="background:rgba(59,130,246,.1)">⚙️</div>
+        <div><div class="slr-label">Cài đặt</div><div class="slr-sub">Thông báo, bán kính, giao diện</div></div>
+        <span class="slr-chev">›</span>
+      </div>
+      ${circle?`<div class="settings-link-row" id="shareInviteBtn">
+        <div class="slr-icon" style="background:rgba(52,211,153,.1)">🔗</div>
+        <div><div class="slr-label">Chia sẻ mã mời nhóm</div><div class="slr-sub">Gửi cho bạn bè để họ tham gia nhóm này</div></div>
+        <span class="slr-val">${circle.inviteCode||''}</span>
+      </div>`:''}
+      <div class="settings-link-row" id="shareAppRow">
+        <div class="slr-icon" style="background:rgba(255,159,28,.1)">🎁</div>
+        <div><div class="slr-label">Chia sẻ ứng dụng</div><div class="slr-sub">Giới thiệu Gom Đơn cho bạn bè</div></div>
+        <span class="slr-chev">›</span>
+      </div>
+    </div>
+    <div class="prof-section"><button class="logout-btn" id="logoutBtn">🚪 Đăng xuất</button></div>`;
+
+  body.querySelectorAll('.circle-item-row').forEach(el=>{
+    el.onclick=()=>{
+      const cid=el.dataset.cid;
+      currentCircleId=cid;
+      db?.collection('users').doc(currentUser.uid).update({lastCircleId:cid}).catch(()=>{});
+      subscribeToOrders(); currentTab='home'; renderApp();
+      toast(`✅ Chuyển sang: ${myCircles.find(c=>c.id===cid)?.name}`);
+    };
+  });
+  body.querySelectorAll('.code-copy').forEach(el=>{
+    el.onclick=e=>{ e.stopPropagation(); navigator.clipboard?.writeText(el.dataset.code); toast('📋 Đã sao chép mã mời!'); };
+  });
+  body.querySelector('#goSettings').onclick=()=>{ currentScreen='settings'; renderApp(); };
+  body.querySelector('#logoutBtn').onclick=signOutUser;
+  body.querySelector('#addCircleBtn').onclick=showCircleModal;
+  body.querySelector('#shareInviteBtn')?.addEventListener('click',()=>{
+    const url=location.href.split('?')[0]+'?join='+circle.inviteCode;
+    if (navigator.share) navigator.share({title:'Gom Đơn – Tham gia nhóm',text:`Mình đang dùng Gom Đơn gom đơn cùng nhau. Vào đây nhé: ${url}`});
+    else { navigator.clipboard?.writeText(url); toast(`📋 Đã sao chép link mời: ${url}`); }
+  });
+  body.querySelector('#shareAppRow')?.addEventListener('click',()=>{
+    const url=location.href.split('?')[0];
+    if (navigator.share) navigator.share({title:'Gom Đơn',text:'Ứng dụng gom đơn thức ăn, chia sẻ phí ship!',url});
+    else { navigator.clipboard?.writeText(url); toast('📋 Đã sao chép link app!'); }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS SCREEN
+═══════════════════════════════════════════════════════════ */
+function renderSettings(scr) {
+  scr.innerHTML = `
+    <div class="status-bar"><span class="sb-time">${nowTime()}</span><span class="sb-icons">📶 5G 🔋</span></div>
+    <div class="settings-back-bar" id="settingsBack">
+      <div class="sb-back-ico">‹</div>
+      <div class="sb-back-label">Cài Đặt</div>
+    </div>
+    <div class="settings-body">
+      <div class="sg-section">
+        <div class="sg-title">Thông báo</div>
+        <div class="sg-row">
+          <div class="sg-ico" style="background:rgba(0,177,79,.1)">🔔</div>
+          <div class="sg-text"><span>Cảnh báo đơn gom</span><small>Nhận thông báo khi có đơn gần bạn</small></div>
+          <input type="checkbox" class="sw-input" id="stAlert" ${alertEnabled?'checked':''}>
+        </div>
+        <div class="sg-row">
+          <div class="sg-ico" style="background:rgba(59,130,246,.1)">📡</div>
+          <div class="sg-text"><span>Bán kính hiện tại</span><small>${alertRadius}m quanh bạn</small></div>
+          <span class="slr-val">${alertRadius}m</span>
+        </div>
+      </div>
+      <div class="sg-section">
+        <div class="sg-title">Giao diện</div>
+        <div class="sg-row" id="stThemeRow" style="cursor:pointer">
+          <div class="sg-ico" style="background:rgba(255,159,28,.1)">${themeIcon()}</div>
+          <div class="sg-text"><span>Chế độ ${theme==='dark'?'Tối 🌙':'Sáng ☀️'}</span><small>Nhấn để chuyển sang chế độ ${theme==='dark'?'sáng':'tối'}</small></div>
+          <span class="slr-chev">›</span>
+        </div>
+      </div>
+      <div class="sg-section">
+        <div class="sg-title">Firebase & Tài khoản</div>
+        <div class="sg-row">
+          <div class="sg-ico" style="background:rgba(255,159,28,.1)">🔥</div>
+          <div class="sg-text"><span>Firebase</span><small>${FIREBASE_CONFIG?.projectId||'—'}</small></div>
+          <span style="font-size:9px;background:rgba(52,211,153,.1);color:#34d399;border-radius:10px;padding:2px 8px;font-weight:700">LIVE</span>
+        </div>
+        <div class="sg-row">
+          <div class="sg-ico" style="background:rgba(59,130,246,.1)">👤</div>
+          <div class="sg-text"><span>Google Account</span><small>${currentUser?.email||'—'}</small></div>
+        </div>
+        <div class="sg-row" id="stReset" style="cursor:pointer">
+          <div class="sg-ico" style="background:rgba(239,68,68,.08)">🔧</div>
+          <div class="sg-text"><span style="color:var(--t2)">Đổi Firebase Config</span><small>Xóa config và cấu hình lại</small></div>
+        </div>
+        <div class="sg-row" id="stLogout" style="cursor:pointer">
+          <div class="sg-ico" style="background:rgba(239,68,68,.08)">🚪</div>
+          <div class="sg-text"><span style="color:#ff6b6b">Đăng xuất</span></div>
+        </div>
+      </div>
+      <div class="sg-section">
+        <div class="sg-title">Ứng dụng</div>
+        <div class="sg-row">
+          <div class="sg-ico" style="background:rgba(107,114,128,.1)">ℹ️</div>
+          <div class="sg-text"><span>Phiên bản</span><small>Gom Đơn – Firebase Edition</small></div>
+          <span class="slr-val">v2.0.0</span>
+        </div>
+      </div>
+    </div>
+    <div class="toast-stack"></div>`;
+
+  document.getElementById('settingsBack').onclick=()=>{ currentScreen='main'; renderApp(); };
+  document.getElementById('stAlert').onchange=e=>{ alertEnabled=e.target.checked; };
+  document.getElementById('stThemeRow').onclick=toggleTheme;
+  document.getElementById('stLogout').onclick=signOutUser;
+  document.getElementById('stReset').onclick=()=>{
+    if(confirm('Xóa Firebase config? Bạn sẽ cần cấu hình lại từ đầu.')){
+      localStorage.removeItem('gd_fb_cfg'); location.reload();
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CREATE ORDER SHEET
+═══════════════════════════════════════════════════════════ */
+function showCreateSheet() {
+  const scr = document.getElementById('screen');
+  scr.querySelector('.sheet-scrim')?.remove();
+  const scrim = document.createElement('div');
+  scrim.className='sheet-scrim';
+  scrim.innerHTML=`
+    <div class="sheet-box">
+      <div class="sh-handle"></div>
+      <div class="sh-title">Tạo Đơn Gom 📢</div>
+      <div class="sh-sub">Mở link group order trong app Grab/ShopeeFood, sao chép và dán vào đây</div>
+      <div class="link-wrap">
+        <input class="link-input" id="linkInput" placeholder="Dán link đơn nhóm Grab hoặc ShopeeFood vào đây…" autocomplete="off">
+        <button class="link-paste" id="pasteBtn" title="Dán từ clipboard">📋</button>
+      </div>
+      <div class="plat-chips">
+        <button class="plat-chip-btn grab-chip" id="fillGrab">🍜 Demo: Link Grab</button>
+        <button class="plat-chip-btn shopee-chip" id="fillShopee">🧋 Demo: Link Shopee</button>
+      </div>
+      <button class="bcast-btn" id="broadcastBtn">
+        <div class="pulse-ring"></div>
+        <span>📢 Gom Đơn Với Nhóm!</span>
+      </button>
+      <button class="dl-cancel" id="sheetClose">Hủy</button>
+    </div>`;
+  scr.appendChild(scrim);
+  scrim.querySelector('#pasteBtn').onclick=async()=>{
+    try{ const t=await navigator.clipboard.readText(); scrim.querySelector('#linkInput').value=t; }
+    catch(e){ toast('⚠️ Không đọc được clipboard'); }
+  };
+  scrim.querySelector('#fillGrab').onclick=()=>{ scrim.querySelector('#linkInput').value='https://r.grab.com/g/s/group-order-demo-'+Date.now(); };
+  scrim.querySelector('#fillShopee').onclick=()=>{ scrim.querySelector('#linkInput').value='https://shopeefood.vn/share/group/'+Date.now(); };
+  scrim.querySelector('#sheetClose').onclick=()=>scrim.remove();
+  scrim.onclick=e=>{ if(e.target===scrim) scrim.remove(); };
+  scrim.querySelector('#broadcastBtn').onclick=async()=>{
+    const link=scrim.querySelector('#linkInput').value.trim();
+    if(!link){ toast('⚠️ Hãy dán link trước!'); return; }
+    if(!currentCircleId){ toast('⚠️ Bạn chưa chọn nhóm nào!'); return; }
+    const btn=scrim.querySelector('#broadcastBtn');
+    btn.disabled=true; btn.innerHTML='<span>⏳ Đang tạo đơn…</span>';
+    try{
+      const platform=detectPlatform(link);
+      let lat=null,lng=null;
+      try{ const pos=await getUserLocation(); lat=pos.lat; lng=pos.lng; }catch(e){}
+      await createOrder(link,platform,lat,lng);
+      scrim.remove(); currentTab='home'; renderApp();
+      setTimeout(()=>toast(`🍜 Đã mở đơn gom! Mọi người trong nhóm sẽ thấy ngay.`),300);
+    }catch(e){
+      btn.disabled=false; btn.innerHTML='<div class="pulse-ring"></div><span>📢 Gom Đơn Với Nhóm!</span>';
+      toast('❌ '+e.message);
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DEEP LINK SHEET (item picker for joining)
+═══════════════════════════════════════════════════════════ */
+function showDeepLink(order) {
+  const scr = document.getElementById('screen');
+  scr.querySelector('.dl-scrim')?.remove();
+  const menu = MENUS[order.platform]||MENUS.grab;
+  let picked = menu.items[0];
+  const isSh = order.platform==='shopeefood';
+  const scrim = document.createElement('div');
+  scrim.className='dl-scrim';
+  scrim.innerHTML=`
+    <div class="dl-box">
+      <div class="sh-handle"></div>
+      <div class="dl-logo">${order.emoji||'🍜'}</div>
+      <div class="dl-title">Chọn Món · ${isSh?'ShopeeFood':'GrabFood'}</div>
+      <div class="dl-desc">Thêm món vào đơn của <strong>${order.hostName?.split(' ').pop()||'bạn'}</strong> tại <strong>${order.restaurant}</strong></div>
+      <div class="menu-list">
+        ${menu.items.map((it,i)=>`<div class="menu-opt ${i===0?'sel':''}" data-id="${it.id}">
+          <div><div class="mo-name">${it.name}</div></div>
+          <span class="mo-price">${vnd(it.price)}</span>
+        </div>`).join('')}
+      </div>
+      <button class="dl-cta ${isSh?'shopee':'grab'}" id="dlAdd">Thêm vào Đơn Gom · ${vnd(picked.price)}</button>
+      <button class="dl-cancel" id="dlClose">Quay Lại</button>
+    </div>`;
+  scr.appendChild(scrim);
+  scrim.querySelectorAll('.menu-opt').forEach(row=>{
+    row.onclick=()=>{
+      scrim.querySelectorAll('.menu-opt').forEach(r=>r.classList.remove('sel'));
+      row.classList.add('sel');
+      picked=menu.items.find(it=>it.id===row.dataset.id);
+      scrim.querySelector('#dlAdd').textContent=`Thêm vào Đơn Gom · ${vnd(picked.price)}`;
+    };
+  });
+  scrim.querySelector('#dlClose').onclick=()=>scrim.remove();
+  scrim.querySelector('#dlAdd').onclick=async()=>{
+    const btn=scrim.querySelector('#dlAdd'); btn.disabled=true; btn.textContent='⏳ Đang thêm…';
+    try{
+      const prevUl=unlockedCount(order.total||0);
+      await joinOrder(order.id,picked);
+      // Find updated order from real-time subscription
+      const updated=circleOrders.find(o=>o.id===order.id)||{total:(order.total||0)+picked.price};
+      const newUl=unlockedCount(updated.total||0);
+      scrim.remove();
+      toast(`✅ Đã thêm: ${picked.name}`);
+      if(newUl>prevUl) setTimeout(()=>{ confetti(); toast(`🎉 Mở khoá ${MILESTONES[newUl-1].label}!`); },400);
+    }catch(e){
+      btn.disabled=false; btn.textContent=`Thêm vào Đơn Gom · ${vnd(picked.price)}`;
+      toast('❌ '+e.message);
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CIRCLE MODAL
+═══════════════════════════════════════════════════════════ */
+function showCircleModal() {
+  const scr = document.getElementById('screen');
+  scr.querySelector('.cm-scrim')?.remove();
+  const scrim=document.createElement('div'); scrim.className='cm-scrim';
+  scrim.innerHTML=`
+    <div class="cm-box">
+      <div class="cm-hdr"><h3>👥 Quản lý Nhóm</h3><button class="cm-x" id="cmClose">✕</button></div>
+      <div class="cm-body">
+        ${myCircles.length?`<div style="display:flex;flex-direction:column;gap:6px">
+          ${myCircles.map(c=>`<div class="ci-row ${c.id===currentCircleId?'sel':''}" data-id="${c.id}">
+            <div><div class="ci-name">${c.name}</div><div class="ci-loc">${c.location||''}</div></div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              ${c.id===currentCircleId?'<span style="font-size:9px;color:var(--grab);font-weight:700">✓ Đang chọn</span>':'<span style="font-size:9px;color:var(--t3)">Chọn nhóm này</span>'}
+              ${c.inviteCode?`<span class="code-ic" data-ic="${c.inviteCode}" style="font-size:9px;color:var(--acc);font-weight:800;cursor:pointer;letter-spacing:1px">📋 ${c.inviteCode}</span>`:''}
+            </div>
+          </div>`).join('')}
+        </div>`:'<div style="font-size:11px;color:var(--t3);text-align:center;padding:10px">Bạn chưa ở trong nhóm nào</div>'}
+        <div>
+          <div style="font-size:12px;font-weight:800;color:var(--t2);margin-bottom:8px">Tham gia bằng mã mời</div>
+          <div style="display:flex;gap:8px">
+            <input class="cm-input" id="joinCodeInput" placeholder="Mã 6 ký tự (vd: AB1C2D)" style="flex:1;margin:0;text-transform:uppercase;letter-spacing:2px">
+            <button class="cm-cta" style="width:auto;padding:10px 14px;font-size:11px" id="joinCodeBtn">Tham gia</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:var(--t2);margin-bottom:8px">Tạo nhóm mới</div>
+          <input class="cm-input" id="newCircleName" placeholder="Tên nhóm (vd: Dev Team Tầng 5)">
+          <input class="cm-input" id="newCircleLoc" placeholder="Địa chỉ giao hàng">
+          <button class="cm-cta" id="createCircleBtn">＋ Tạo &amp; Tham gia</button>
+        </div>
+      </div>
+    </div>`;
+  scr.appendChild(scrim);
+  scrim.querySelector('#cmClose').onclick=()=>scrim.remove();
+  scrim.onclick=e=>{ if(e.target===scrim) scrim.remove(); };
+  scrim.querySelectorAll('.ci-row').forEach(el=>{
+    el.onclick=()=>{
+      currentCircleId=el.dataset.id;
+      db?.collection('users').doc(currentUser.uid).update({lastCircleId:el.dataset.id}).catch(()=>{});
+      subscribeToOrders(); currentTab='home'; scrim.remove(); renderApp();
+      toast(`✅ Chuyển sang: ${myCircles.find(c=>c.id===el.dataset.id)?.name}`);
+    };
+  });
+  scrim.querySelectorAll('.code-ic').forEach(el=>{
+    el.onclick=e=>{ e.stopPropagation(); navigator.clipboard?.writeText(el.dataset.ic); toast('📋 Đã sao chép mã mời!'); };
+  });
+  scrim.querySelector('#joinCodeBtn').onclick=async()=>{
+    const code=scrim.querySelector('#joinCodeInput').value.trim();
+    if(!code) return;
+    const btn=scrim.querySelector('#joinCodeBtn'); btn.disabled=true; btn.textContent='⏳…';
+    try{
+      const circle=await joinCircleByCode(code); scrim.remove(); subscribeToOrders(); renderApp();
+      toast(`✅ Đã tham gia: ${circle.name}`);
+    }catch(e){ btn.disabled=false; btn.textContent='Tham gia'; toast('❌ '+e.message); }
+  };
+  scrim.querySelector('#createCircleBtn').onclick=async()=>{
+    const name=scrim.querySelector('#newCircleName').value.trim();
+    const loc=scrim.querySelector('#newCircleLoc').value.trim();
+    if(!name||!loc){ toast('⚠️ Điền đủ thông tin'); return; }
+    const btn=scrim.querySelector('#createCircleBtn'); btn.disabled=true; btn.textContent='⏳ Đang tạo…';
+    try{
+      const circle=await createCircle(name,loc); scrim.remove(); subscribeToOrders(); renderApp();
+      toast(`✅ Đã tạo nhóm: ${circle.name} · Mã: ${circle.inviteCode}`);
+    }catch(e){ btn.disabled=false; btn.textContent='＋ Tạo & Tham gia'; toast('❌ '+e.message); }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════════════════ */
+function initTheme() {
+  try{ const s=sessionStorage.getItem('gomdon_theme'); if(s) theme=s; }catch(e){}
+  if(!theme && window.matchMedia?.('(prefers-color-scheme:light)').matches) theme='light';
+  applyTheme();
+}
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme',theme);
+  try{ sessionStorage.setItem('gomdon_theme',theme); }catch(e){}
+}
+function toggleTheme() {
+  theme=theme==='dark'?'light':'dark'; applyTheme();
+  if(currentUser) renderApp(); else renderAuth();
+  toast(theme==='light'?'☀️ Chế độ sáng':'🌙 Chế độ tối');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+initTheme();
+
+// Handle invite code in URL
+const _urlCode = new URLSearchParams(location.search).get('join');
+if (_urlCode) sessionStorage.setItem('pending_invite', _urlCode);
+
+if (!FIREBASE_CONFIG) {
+  renderSetupScreen();
+} else {
+  initFirebase();
+}
+
+// Live clock ticker
+setInterval(()=>{ const el=document.querySelector('.sb-time'); if(el) el.textContent=nowTime(); }, 30000);
+</script>
+</body>
+</html>
+
+
