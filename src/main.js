@@ -365,7 +365,9 @@ async function createOrder(link, platform, lat, lng, circleId, customTitle) {
         uid: currentUser.uid,
         name: currentUser.displayName,
         avatar: currentUser.photoURL,
-        joinedAt: new Date()
+        joinedAt: new Date(),
+        lat: lat || null,
+        lng: lng || null
       }
     ],
     messages: [],
@@ -385,11 +387,20 @@ async function joinOrderDirect(orderId) {
   const order  = snap.data();
   const isAlreadyJoined = (order.participants || []).some(p => p.uid === currentUser.uid);
   if (isAlreadyJoined) return;
+  let lat = null, lng = null;
+  try {
+    const pos = await getUserLocation();
+    lat = pos.lat;
+    lng = pos.lng;
+  } catch (e) {}
+
   const participant = {
     uid:currentUser.uid,
     name:currentUser.displayName,
     avatar:currentUser.photoURL,
-    joinedAt:new Date()
+    joinedAt:new Date(),
+    lat,
+    lng
   };
   await ref.update({
     participants: firebase.firestore.FieldValue.arrayUnion(participant)
@@ -528,42 +539,72 @@ function subscribeToOrders() {
         return tB - tA;
       });
 
-      // Handle host live location sharing
-      const activeHostingOrder = circleOrders.find(o => o.hostUid === currentUser?.uid && (o.status === 'collecting' || o.status === 'closed'));
-      if (activeHostingOrder) {
-        if (hostLocationWatchId && lastWrittenOrderId !== activeHostingOrder.id) {
+      // Handle host and guest live location sharing
+      const activeParticipatingOrder = circleOrders.find(o => 
+        (o.hostUid === currentUser?.uid || (o.participants || []).some(p => p.uid === currentUser?.uid)) && 
+        (o.status === 'collecting' || o.status === 'closed')
+      );
+      if (activeParticipatingOrder) {
+        const isHost = activeParticipatingOrder.hostUid === currentUser?.uid;
+        if (hostLocationWatchId && lastWrittenOrderId !== activeParticipatingOrder.id) {
           navigator.geolocation.clearWatch(hostLocationWatchId);
           hostLocationWatchId = null;
           lastWrittenCoords = null;
         }
         
         if (!hostLocationWatchId) {
-          const orderId = activeHostingOrder.id;
+          const orderId = activeParticipatingOrder.id;
           lastWrittenOrderId = orderId;
-          console.log('Starting geolocation watch for host active order:', orderId);
+          console.log('Starting geolocation watch for active order:', orderId, 'asHost:', isHost);
           hostLocationWatchId = navigator.geolocation.watchPosition(
             pos => {
               const lat = pos.coords.latitude;
               const lng = pos.coords.longitude;
+              if (!isHost) {
+                userLocation = { lat, lng };
+              }
               const hasShifted = !lastWrittenCoords || 
                 Math.abs(lat - lastWrittenCoords.lat) > 0.0001 || 
                 Math.abs(lng - lastWrittenCoords.lng) > 0.0001;
               if (hasShifted) {
-                console.log('Host location shifted, updating Firestore:', lat, lng);
-                db.collection('orders').doc(orderId).update({ lat, lng })
-                  .then(() => {
-                    lastWrittenCoords = { lat, lng };
-                  })
-                  .catch(e => console.error('Error updating host location in Firestore:', e));
+                console.log('Location shifted, updating Firestore. asHost:', isHost, lat, lng);
+                if (isHost) {
+                  db.collection('orders').doc(orderId).update({ lat, lng })
+                    .then(() => {
+                      lastWrittenCoords = { lat, lng };
+                    })
+                    .catch(e => console.error('Error updating host location in Firestore:', e));
+                } else {
+                  const currentOrder = circleOrders.find(o => o.id === orderId);
+                  if (currentOrder && currentOrder.participants) {
+                    let updated = false;
+                    const updatedParticipants = currentOrder.participants.map(p => {
+                      if (p.uid === currentUser.uid) {
+                        if (p.lat !== lat || p.lng !== lng) {
+                          updated = true;
+                          return { ...p, lat, lng };
+                        }
+                      }
+                      return p;
+                    });
+                    if (updated) {
+                      db.collection('orders').doc(orderId).update({ participants: updatedParticipants })
+                        .then(() => {
+                          lastWrittenCoords = { lat, lng };
+                        })
+                        .catch(e => console.error('Error updating guest location in Firestore:', e));
+                    }
+                  }
+                }
               }
             },
-            err => console.warn('Host location watch error:', err),
+            err => console.warn('Location watch error:', err),
             { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
           );
         }
       } else {
         if (hostLocationWatchId) {
-          console.log('No active hosting order found, clearing watch');
+          console.log('No active participating order found, clearing watch');
           navigator.geolocation.clearWatch(hostLocationWatchId);
           hostLocationWatchId = null;
           lastWrittenCoords = null;
@@ -1108,19 +1149,23 @@ function renderActiveOrderCard(container, order) {
           
           L.marker([coords.lat, coords.lng], { icon: hostIcon }).addTo(map);
           
-          if (!isHost && userLocation) {
-            const guestIcon = L.divIcon({
-              html: `<div class="map-guest-marker-pin">👤</div>`,
-              className: 'custom-map-marker',
-              iconSize: [20, 20],
-              iconAnchor: [10, 10]
-            });
-            L.marker([userLocation.lat, userLocation.lng], { icon: guestIcon }).addTo(map);
-            
-            map.fitBounds([
-              [coords.lat, coords.lng],
-              [userLocation.lat, userLocation.lng]
-            ], { padding: [15, 15] });
+          const bounds = [[coords.lat, coords.lng]];
+          (order.participants || []).forEach(p => {
+            if (p.uid !== order.hostUid && p.lat && p.lng) {
+              bounds.push([p.lat, p.lng]);
+              const isMe = p.uid === currentUser?.uid;
+              const guestIcon = L.divIcon({
+                html: `<div class="map-guest-marker-pin ${isMe ? 'me' : ''}">${p.name.charAt(0)}</div>`,
+                className: 'custom-map-marker',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+              });
+              L.marker([p.lat, p.lng], { icon: guestIcon }).addTo(map);
+            }
+          });
+          
+          if (bounds.length > 1) {
+            map.fitBounds(bounds, { padding: [20, 20] });
           }
           
           // Force Leaflet to recalculate map container size after a short delay
