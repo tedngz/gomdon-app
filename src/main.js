@@ -1328,7 +1328,19 @@ function renderActiveOrderCard(container, order) {
       } catch (err) {
         enableGpsBtn.disabled = false;
         enableGpsBtn.innerHTML = '<span>📡 Chia sẻ vị trí trực tiếp của bạn</span>';
-        toast('❌ Lỗi định vị: ' + (err.message || err));
+        
+        let msg = 'Không thể định vị. Vui lòng thử lại!';
+        const errMsg = (err && err.message) ? err.message.toLowerCase() : '';
+        const errCode = (err && err.code) ? err.code : 0;
+        
+        if (errCode === 1 || errMsg.includes('denied') || errMsg.includes('permission')) {
+          msg = '⚠️ Quyền vị trí bị chặn! Hãy nhấp vào biểu tượng 🔒 hoặc aA ở thanh địa chỉ trình duyệt, bật quyền vị trí "Cho phép" và tải lại trang.';
+        } else if (errCode === 3 || errMsg.includes('timeout')) {
+          msg = '⏳ Quá thời gian định vị. Hãy thử bật định vị GPS trên điện thoại và thử lại.';
+        } else if (err.message || err) {
+          msg = '❌ Lỗi định vị: ' + (err.message || err);
+        }
+        toast(msg);
       }
     };
   }
