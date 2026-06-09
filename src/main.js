@@ -1699,7 +1699,7 @@ function showHistoryOrderDetailModal(order) {
   if (order.lat && order.lng) {
     const mapsLink = `https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}`;
     locationHtml = `
-      <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left">
+      <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left;flex-shrink:0">
         <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:4px">📍 Vị trí giao hàng</div>
         <div style="font-size:11px;color:var(--t1);margin-bottom:8px">Địa chỉ: <strong>${deliveryAddress}</strong></div>
         <a href="${mapsLink}" target="_blank" class="join-btn-main ${isSh?'shopee':'grab'}" style="display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:11px;padding:8px 12px;border-radius:8px;color:#000;font-weight:800;width:100%;box-sizing:border-box">
@@ -1709,7 +1709,7 @@ function showHistoryOrderDetailModal(order) {
     `;
   } else {
     locationHtml = `
-      <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left">
+      <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left;flex-shrink:0">
         <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:4px">📍 Vị trí giao hàng</div>
         <div style="font-size:11px;color:var(--t1)">Địa chỉ: <strong>${deliveryAddress}</strong> (Không có định vị GPS)</div>
       </div>
@@ -1723,7 +1723,7 @@ function showHistoryOrderDetailModal(order) {
         <button class="cm-x" id="cmClose">✕</button>
       </div>
       <div class="cm-body" style="gap:12px;max-height:70vh">
-        <div class="order-card" style="box-shadow:none;border-color:var(--border);width:100%;box-sizing:border-box">
+        <div class="order-card" style="box-shadow:none;border-color:var(--border);width:100%;box-sizing:border-box;flex-shrink:0">
           <div class="oc-header ${isSh?'shopee-bg':'grab-bg'}" style="padding:12px 14px;display:flex;align-items:center">
             <div class="oc-icon" style="font-size:24px;margin-right:10px">${order.emoji || '🍜'}</div>
             <div class="oc-info" style="flex:1;text-align:left">
@@ -1737,7 +1737,7 @@ function showHistoryOrderDetailModal(order) {
 
         ${locationHtml}
 
-        <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left">
+        <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left;flex-shrink:0">
           <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:8px">👥 Thành viên tham gia (${ppl})</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             ${(order.participants || []).map(p => `
@@ -1749,7 +1749,7 @@ function showHistoryOrderDetailModal(order) {
           </div>
         </div>
 
-        <div class="chat-col" style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:left">
+        <div class="chat-col" style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:left;flex-shrink:0">
           <div style="font-size:11px;font-weight:800;color:var(--t2)">💬 Nhật ký trò chuyện</div>
           <div class="chat-box" style="height:150px;max-height:150px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
             ${(order.messages || []).length === 0 
@@ -1769,7 +1769,7 @@ function showHistoryOrderDetailModal(order) {
           </div>
         </div>
         
-        <button class="cm-cta" id="openLinkBtn" style="font-size:11px;padding:10px;width:100%">
+        <button class="cm-cta" id="openLinkBtn" style="font-size:11px;padding:10px;width:100%;flex-shrink:0">
           🔗 Xem Link Gốc Trên Grab/ShopeeFood
         </button>
       </div>
