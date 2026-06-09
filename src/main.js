@@ -61,9 +61,64 @@ const vnd       = n  => Math.round(n).toLocaleString('vi-VN') + ' đ';
 const nowTime   = () => { const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); };
 const themeIcon = () => theme === 'dark' ? '☀️' : '🌙';
 const firstName = () => currentUser?.displayName?.split(' ').pop() || 'bạn';
-const curCircle = () => myCircles.find(c => c.id === currentCircleId) || myCircles[0] || null;
+const curCircle = () => myCircles.find(c => c.id === (localStorage.getItem('gd_last_used_circle_id') || '')) || myCircles[0] || null;
 const curOrder  = () => circleOrders.find(o => o.status === 'collecting') || null;
 const statusVN = s => ({collecting:'Đang Mở',delivered:'Đã Đóng',cancelled:'Đã Hủy'}[s]||s);
+
+function ensureAbsoluteUrl(url) {
+  if (!url) return '';
+  url = url.trim();
+  if (!/^https?:\/\//i.test(url)) {
+    return 'https://' + url;
+  }
+  return url;
+}
+
+function autoGenerateTitle(url) {
+  if (!url) return '';
+  try {
+    const parsed = new URL(ensureAbsoluteUrl(url));
+    let path = parsed.pathname;
+    
+    if (parsed.hostname.includes('grab.com')) {
+      const parts = path.split('/').filter(p => p);
+      const restIdx = parts.indexOf('restaurant');
+      if (restIdx !== -1 && parts[restIdx + 1]) {
+        let name = decodeURIComponent(parts[restIdx + 1]);
+        name = name.replace(/-delivery$/i, '');
+        return formatRestaurantName(name);
+      }
+      if (path.includes('/g/s/group-order-demo')) {
+        return 'GrabFood Demo Quán';
+      }
+    }
+    
+    if (parsed.hostname.includes('shopeefood.vn') || parsed.hostname.includes('now.vn')) {
+      const parts = path.split('/').filter(p => p);
+      const lastPart = parts[parts.length - 1];
+      if (lastPart && lastPart !== 'group' && lastPart !== 'share') {
+        return formatRestaurantName(decodeURIComponent(lastPart));
+      }
+      if (parts[parts.length - 2] && parts[parts.length - 2] !== 'share') {
+        return formatRestaurantName(decodeURIComponent(parts[parts.length - 2]));
+      }
+      if (path.includes('/share/group')) {
+        return 'ShopeeFood Demo Quán';
+      }
+    }
+  } catch (e) {
+    console.warn('Title autogen failed', e);
+  }
+  return '';
+}
+
+function formatRestaurantName(slug) {
+  let name = slug.replace(/[-_]/g, ' ');
+  return name.split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+    .trim();
+}
 
 function calcDistance(lat1,lng1,lat2,lng2) {
   if (!lat1||!lat2) return 9999;
@@ -178,7 +233,7 @@ async function loadOrCreateProfile(user) {
     userProfile = {id:snap.id, ...snap.data()};
     const ids   = userProfile.circleIds || [];
     myCircles   = ids.length ? await loadCircles(ids) : [];
-    currentCircleId = userProfile.lastCircleId || myCircles[0]?.id || null;
+    localStorage.setItem('gd_last_used_circle_id', userProfile.lastCircleId || myCircles[0]?.id || '');
   } else {
     const data = {
       name:user.displayName, email:user.email, avatar:user.photoURL,
@@ -209,11 +264,10 @@ async function createCircle(name,location) {
   const cid = ref.id;
   await db.collection('users').doc(currentUser.uid).update({
     circleIds:firebase.firestore.FieldValue.arrayUnion(cid),
-    lastCircleId:cid,
   });
   const circle = {id:cid,name,location,memberUids:[currentUser.uid],inviteCode};
   myCircles = [...myCircles, circle];
-  currentCircleId = cid;
+  localStorage.setItem('gd_last_used_circle_id', cid);
   return circle;
 }
 
@@ -223,20 +277,18 @@ async function joinCircleByCode(code) {
   const doc = snap.docs[0];
   const cid = doc.id;
   if (doc.data().memberUids?.includes(currentUser.uid)) {
-    // Already a member – just switch to it
-    currentCircleId = cid;
-    await db.collection('users').doc(currentUser.uid).update({lastCircleId:cid});
+    localStorage.setItem('gd_last_used_circle_id', cid);
     const existing = myCircles.find(c=>c.id===cid);
     if (!existing) myCircles = [...myCircles,{id:cid,...doc.data()}];
     return myCircles.find(c=>c.id===cid);
   }
   await db.collection('circles').doc(cid).update({memberUids:firebase.firestore.FieldValue.arrayUnion(currentUser.uid)});
   await db.collection('users').doc(currentUser.uid).update({
-    circleIds:firebase.firestore.FieldValue.arrayUnion(cid), lastCircleId:cid,
+    circleIds:firebase.firestore.FieldValue.arrayUnion(cid),
   });
   const circle = {id:cid,...doc.data(),memberUids:[...(doc.data().memberUids||[]),currentUser.uid]};
   myCircles = [...myCircles.filter(c=>c.id!==cid), circle];
-  currentCircleId = cid;
+  localStorage.setItem('gd_last_used_circle_id', cid);
   return circle;
 }
 
@@ -251,7 +303,6 @@ async function joinCircleDirect(circleId) {
   
   await db.collection('users').doc(currentUser.uid).update({
     circleIds: firebase.firestore.FieldValue.arrayUnion(circleId),
-    lastCircleId: circleId,
   });
   
   const circleData = { id: circleId, ...doc.data() };
@@ -263,7 +314,7 @@ async function joinCircleDirect(circleId) {
   if (!myCircles.some(c => c.id === circleId)) {
     myCircles = [...myCircles, circleData];
   }
-  currentCircleId = circleId;
+  localStorage.setItem('gd_last_used_circle_id', circleId);
 }
 
 async function handleInviteCode(code) {
@@ -275,15 +326,16 @@ async function handleInviteCode(code) {
   } catch(e) { toast('❌ '+e.message); }
 }
 
-async function createOrder(link, platform, lat, lng, circleId) {
-  const targetCircleId = circleId || currentCircleId;
-  const circle = myCircles.find(c => c.id === targetCircleId) || curCircle();
-  const restaurant = platform === 'shopeefood' ? 'ShopeeFood' : 'GrabFood';
+async function createOrder(link, platform, lat, lng, circleId, customTitle) {
+  const targetCircleId = circleId || localStorage.getItem('gd_last_used_circle_id') || myCircles[0]?.id;
+  const circle = myCircles.find(c => c.id === targetCircleId) || myCircles[0];
+  const restaurant = customTitle || autoGenerateTitle(link) || (platform === 'shopeefood' ? 'ShopeeFood' : 'GrabFood');
   const emoji = platform === 'shopeefood' ? '🧋' : '🍜';
+  const normalizedLink = ensureAbsoluteUrl(link);
   const data   = {
     circleId:targetCircleId, circleName:circle?.name||'',
     hostUid:currentUser.uid, hostName:currentUser.displayName, hostAvatar:currentUser.photoURL,
-    restaurant, emoji, platform, link,
+    restaurant, emoji, platform, link:normalizedLink,
     status:'collecting',
     participants: [
       {
@@ -299,6 +351,7 @@ async function createOrder(link, platform, lat, lng, circleId) {
     expiresAt:new Date(Date.now()+45*60*1000),
   };
   const ref = await db.collection('orders').add(data);
+  localStorage.setItem('gd_last_used_circle_id', targetCircleId);
   return {id:ref.id,...data};
 }
 
@@ -386,7 +439,7 @@ async function loadNearbyOrders() {
       const dist = calcDistance(userLocation?.lat, userLocation?.lng, d.lat, d.lng);
       return {id:doc.id, ...d, dist, distLabel:distLabel(dist), distClass:dist<=50?'close':'mid'};
     })
-    .filter(o => o.circleId !== currentCircleId)
+    .filter(o => !myCircles.some(c => c.id === o.circleId))
     // If we have location, filter by radius; otherwise show everything
     .filter(o => !userLocation || o.dist <= alertRadius)
     // Sort by distance if we have location, otherwise by newest (createdAt)
@@ -878,7 +931,7 @@ function renderActiveOrderCard(container, order) {
   `;
 
   container.querySelector('#openAppBtn').onclick = () => {
-    window.open(order.link, '_blank');
+    window.open(ensureAbsoluteUrl(order.link), '_blank');
     if (!isJoined) {
       joinOrderDirect(order.id).then(() => renderApp()).catch(e => toast('❌ ' + e.message));
     }
@@ -948,10 +1001,9 @@ function renderActiveOrderCard(container, order) {
   }
 
   container.querySelector('#shareBtn').onclick = () => {
-    const circle = curCircle();
-    const msg = `🍜 Đơn gom tại ${order.restaurant}!\nTham gia link: ${order.link}\nNhóm: ${circle?.name||''}`;
+    const msg = `🍜 Đơn gom tại ${order.restaurant}!\nTham gia link: ${ensureAbsoluteUrl(order.link)}\nNhóm: ${order.circleName||''}`;
     if (navigator.share) navigator.share({ title: 'Gom Đơn', text: msg });
-    else { navigator.clipboard?.writeText(order.link); toast('📋 Đã copy link đặt món!'); }
+    else { navigator.clipboard?.writeText(ensureAbsoluteUrl(order.link)); toast('📋 Đã copy link đặt món!'); }
   };
 
   const chatInput = container.querySelector('#chatInput');
@@ -1048,11 +1100,11 @@ function displayNearby(body) {
           await joinCircleDirect(o.circleId);
         }
         await joinOrderDirect(o.id);
-        currentCircleId = o.circleId;
+        localStorage.setItem('gd_last_used_circle_id', o.circleId);
         subscribeToOrders();
         currentTab = 'home';
         renderApp();
-        window.open(o.link, '_blank');
+        window.open(ensureAbsoluteUrl(o.link), '_blank');
         toast(`✅ Đã tham gia nhóm và mở Grab/Shopee!`);
       } catch(e) {
         btn.disabled = false;
@@ -1173,40 +1225,29 @@ function displayHistory(body, history) {
   
   body.querySelectorAll('.hc-card').forEach(card => {
     card.onclick = () => {
-      const cid = card.dataset.cid;
-      const cname = card.dataset.cname;
-      currentCircleId = cid;
-      db?.collection('users').doc(currentUser.uid).update({lastCircleId: cid}).catch(()=>{});
-      subscribeToOrders();
-      currentTab = 'home';
-      renderApp();
-      toast(`✅ Đã chuyển đến nhóm: ${cname}`);
+      const oid = card.dataset.id;
+      const order = history.find(o => o.id === oid);
+      if (order) {
+        showHistoryOrderDetailModal(order);
+      }
     };
   });
 }
 
 function buildHistoryCard(o) {
   const isHost = o.hostUid === currentUser?.uid;
-  const ppl = (o.items || []).length + 1;
+  const ppl = (o.participants || []).length;
   const isSh = o.platform === 'shopeefood';
   const roleBadge = isHost 
     ? `<span class="hc-role host">Host 👑</span>` 
     : `<span class="hc-role member">Chung 🍜</span>`;
   
-  let myOrderText = '';
-  if (isHost) {
-    myOrderText = 'Chủ đơn (Gom món)';
-  } else {
-    const myItems = (o.items || []).filter(it => it.uid === currentUser?.uid);
-    if (myItems.length > 0) {
-      myOrderText = `Bạn đặt: ${myItems.map(it => it.itemName).join(', ')}`;
-    }
-  }
+  let myOrderText = isHost ? 'Chủ đơn (Gom món)' : 'Thành viên tham gia';
 
   const dateStr = o.createdAt ? (o.createdAt.toDate ? o.createdAt.toDate().toLocaleDateString('vi-VN') : new Date(o.createdAt).toLocaleDateString('vi-VN')) : 'Vừa xong';
 
   return `
-    <div class="hc-card" data-cid="${o.circleId}" data-cname="${o.circleName || 'Nhóm'}">
+    <div class="hc-card" data-id="${o.id}">
       <div class="hc-top">
         <div class="hc-logo">${o.emoji || '🍜'}</div>
         <div class="hc-info">
@@ -1220,8 +1261,6 @@ function buildHistoryCard(o) {
       <div class="hc-body-row">
         <div class="hc-stats">
           <span>👥 ${ppl} người</span>
-          <span>·</span>
-          <strong>${vnd(o.total || 0)}</strong>
         </div>
         ${roleBadge}
       </div>
@@ -1259,11 +1298,10 @@ function renderProfileTab(body) {
       <div class="prof-section" style="padding-top:14px">
         <div class="section-label">Nhóm của tôi</div>
         ${myCircles.map(c=>`
-          <div class="circle-item-row ${c.id===currentCircleId?'active':''}" data-cid="${c.id}">
+          <div class="circle-item-row" data-cid="${c.id}" data-code="${c.inviteCode||''}">
             <div class="cir-icon">🏢</div>
             <div class="cir-info"><div class="cir-name">${c.name}</div><div class="cir-loc">${c.location||''}</div></div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-              ${c.id===currentCircleId?'<span style="font-size:9px;color:var(--grab);font-weight:700">✓ Đang chọn</span>':''}
               ${c.inviteCode?'<span class="code-copy" data-code="'+c.inviteCode+'" style="font-size:9px;color:var(--acc);font-weight:800;cursor:pointer;letter-spacing:1px">📋 '+c.inviteCode+'</span>':''}
             </div>
           </div>`).join('')}
@@ -1276,11 +1314,6 @@ function renderProfileTab(body) {
           <div><div class="slr-label">Cài đặt</div><div class="slr-sub">Thông báo, bán kính, giao diện</div></div>
           <span class="slr-chev">›</span>
         </div>
-        ${circle?`<div class="settings-link-row" id="shareInviteBtn">
-          <div class="slr-icon" style="background:rgba(52,211,153,.1)">🔗</div>
-          <div><div class="slr-label">Chia sẻ mã mời nhóm</div><div class="slr-sub">Gửi cho bạn bè để họ tham gia nhóm này</div></div>
-          <span class="slr-val">${circle.inviteCode||''}</span>
-        </div>`:''}
         <div class="settings-link-row" id="shareAppRow">
           <div class="slr-icon" style="background:rgba(255,159,28,.1)">🎁</div>
           <div><div class="slr-label">Chia sẻ ứng dụng</div><div class="slr-sub">Giới thiệu Gom Đơn cho bạn bè</div></div>
@@ -1291,11 +1324,11 @@ function renderProfileTab(body) {
     </div>`;
   body.querySelectorAll('.circle-item-row').forEach(el=>{
     el.onclick=()=>{
-      const cid=el.dataset.cid;
-      currentCircleId=cid;
-      db?.collection('users').doc(currentUser.uid).update({lastCircleId:cid}).catch(()=>{});
-      subscribeToOrders(); currentTab='home'; renderApp();
-      toast(`✅ Chuyển sang: ${myCircles.find(c=>c.id===cid)?.name}`);
+      const code = el.dataset.code;
+      if (code) {
+        navigator.clipboard?.writeText(code);
+        toast(`📋 Đã sao chép mã mời: ${code}`);
+      }
     };
   });
   body.querySelectorAll('.code-copy').forEach(el=>{
@@ -1304,11 +1337,6 @@ function renderProfileTab(body) {
   body.querySelector('#goSettings').onclick=()=>{ currentScreen='settings'; renderApp(); };
   body.querySelector('#logoutBtn').onclick=signOutUser;
   body.querySelector('#addCircleBtn').onclick=showCircleModal;
-  body.querySelector('#shareInviteBtn')?.addEventListener('click',()=>{
-    const url=location.href.split('?')[0]+'?join='+circle.inviteCode;
-    if (navigator.share) navigator.share({title:'Gom Đơn – Tham gia nhóm',text:`Mình đang dùng Gom Đơn gom đơn cùng nhau. Vào đây nhé: ${url}`});
-    else { navigator.clipboard?.writeText(url); toast(`📋 Đã sao chép link mời: ${url}`); }
-  });
   body.querySelector('#shareAppRow')?.addEventListener('click',()=>{
     const url=location.href.split('?')[0];
     if (navigator.share) navigator.share({title:'Gom Đơn',text:'Ứng dụng gom đơn thức ăn, chia sẻ phí ship!',url});
@@ -1448,7 +1476,9 @@ function showAlertsSettingsSheet() {
    CREATE ORDER SHEET
 ═══════════════════════════════════════════════════════════ */
 function showCreateSheet(circleId) {
-  const targetCircleId = circleId && typeof circleId === 'string' ? circleId : currentCircleId;
+  const targetCircleId = circleId && typeof circleId === 'string' 
+    ? circleId 
+    : (localStorage.getItem('gd_last_used_circle_id') || myCircles[0]?.id || null);
   const scr = document.getElementById('screen');
   scr.querySelector('.sheet-scrim')?.remove();
   const scrim = document.createElement('div');
@@ -1470,6 +1500,12 @@ function showCreateSheet(circleId) {
         <input class="link-input" id="linkInput" placeholder="Dán link đơn nhóm Grab hoặc ShopeeFood vào đây…" autocomplete="off">
         <button class="link-paste" id="pasteBtn" title="Dán từ clipboard">📋</button>
       </div>
+      
+      <div style="margin-bottom: 8px; margin-top: 4px">
+        <label style="font-size:10px;font-weight:800;color:var(--t3);display:block;margin-bottom:4px">Tên quán ăn / Tiêu đề đơn gom:</label>
+        <input class="cm-input" id="restaurantTitleInput" placeholder="Tên quán ăn (tự động nhận diện khi dán link)" style="margin: 0; padding: 10px; font-size:12px;" autocomplete="off">
+      </div>
+
       <div class="plat-chips">
         <button class="plat-chip-btn grab-chip" id="fillGrab">🍜 Demo: Link Grab</button>
         <button class="plat-chip-btn shopee-chip" id="fillShopee">🧋 Demo: Link Shopee</button>
@@ -1481,17 +1517,42 @@ function showCreateSheet(circleId) {
       <button class="dl-cancel" id="sheetClose">Hủy</button>
     </div>`;
   scr.appendChild(scrim);
+
+  const linkInput = scrim.querySelector('#linkInput');
+  const titleInput = scrim.querySelector('#restaurantTitleInput');
+  
+  const updateTitleFromLink = () => {
+    const link = linkInput.value.trim();
+    if (link) {
+      const title = autoGenerateTitle(link);
+      if (title) titleInput.value = title;
+    }
+  };
+  linkInput.oninput = updateTitleFromLink;
+  linkInput.onchange = updateTitleFromLink;
+
   scrim.querySelector('#pasteBtn').onclick=async()=>{
-    try{ const t=await navigator.clipboard.readText(); scrim.querySelector('#linkInput').value=t; }
+    try{ 
+      const t=await navigator.clipboard.readText(); 
+      linkInput.value=t; 
+      updateTitleFromLink();
+    }
     catch(e){ toast('⚠️ Không đọc được clipboard'); }
   };
-  scrim.querySelector('#fillGrab').onclick=()=>{ scrim.querySelector('#linkInput').value='https://r.grab.com/g/s/group-order-demo-'+Date.now(); };
-  scrim.querySelector('#fillShopee').onclick=()=>{ scrim.querySelector('#linkInput').value='https://shopeefood.vn/share/group/'+Date.now(); };
+  scrim.querySelector('#fillGrab').onclick=()=>{ 
+    linkInput.value='https://r.grab.com/g/s/group-order-demo-'+Date.now(); 
+    updateTitleFromLink();
+  };
+  scrim.querySelector('#fillShopee').onclick=()=>{ 
+    linkInput.value='https://shopeefood.vn/share/group/'+Date.now(); 
+    updateTitleFromLink();
+  };
   scrim.querySelector('#sheetClose').onclick=()=>scrim.remove();
   scrim.onclick=e=>{ if(e.target===scrim) scrim.remove(); };
   scrim.querySelector('#broadcastBtn').onclick=async()=>{
-    const link=scrim.querySelector('#linkInput').value.trim();
+    const link=linkInput.value.trim();
     const selCircleId=scrim.querySelector('#circleSelect').value;
+    const customTitle=titleInput.value.trim();
     if(!link){ toast('⚠️ Hãy dán link trước!'); return; }
     if(!selCircleId){ toast('⚠️ Bạn chưa chọn nhóm nào!'); return; }
     const btn=scrim.querySelector('#broadcastBtn');
@@ -1500,7 +1561,7 @@ function showCreateSheet(circleId) {
       const platform=detectPlatform(link);
       let lat=null,lng=null;
       try{ const pos=await getUserLocation(); lat=pos.lat; lng=pos.lng; }catch(e){}
-      await createOrder(link,platform,lat,lng,selCircleId);
+      await createOrder(link,platform,lat,lng,selCircleId,customTitle);
       scrim.remove(); currentTab='home'; renderApp();
       setTimeout(()=>toast(`🍜 Đã mở đơn gom! Mọi người trong nhóm sẽ thấy ngay.`),300);
     }catch(e){
@@ -1577,6 +1638,115 @@ function showCircleModal() {
       toast(`✅ Đã tạo nhóm: ${circle.name} · Mã: ${circle.inviteCode}`);
     }catch(e){ btn.disabled=false; btn.textContent='＋ Tạo & Tham gia'; toast('❌ '+e.message); }
   };
+}
+
+function showHistoryOrderDetailModal(order) {
+  const scr = document.getElementById('screen');
+  scr.querySelector('.cm-scrim')?.remove();
+  
+  const scrim = document.createElement('div');
+  scrim.className = 'cm-scrim';
+  
+  const dateStr = order.createdAt ? (order.createdAt.toDate ? order.createdAt.toDate().toLocaleString('vi-VN') : new Date(order.createdAt).toLocaleString('vi-VN')) : 'Vừa xong';
+  const isSh = order.platform === 'shopeefood';
+  const ppl = (order.participants || []).length;
+  
+  const circle = myCircles.find(c => c.id === order.circleId);
+  const deliveryAddress = circle?.location || order.circleName || 'Địa chỉ nhóm';
+  
+  let locationHtml = '';
+  if (order.lat && order.lng) {
+    const mapsLink = `https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}`;
+    locationHtml = `
+      <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left">
+        <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:4px">📍 Vị trí giao hàng</div>
+        <div style="font-size:11px;color:var(--t1);margin-bottom:8px">Địa chỉ: <strong>${deliveryAddress}</strong></div>
+        <a href="${mapsLink}" target="_blank" class="join-btn-main ${isSh?'shopee':'grab'}" style="display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:11px;padding:8px 12px;border-radius:8px;color:#000;font-weight:800;width:100%;box-sizing:border-box">
+          📍 Mở bản đồ Google Maps
+        </a>
+      </div>
+    `;
+  } else {
+    locationHtml = `
+      <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left">
+        <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:4px">📍 Vị trí giao hàng</div>
+        <div style="font-size:11px;color:var(--t1)">Địa chỉ: <strong>${deliveryAddress}</strong> (Không có định vị GPS)</div>
+      </div>
+    `;
+  }
+
+  scrim.innerHTML = `
+    <div class="cm-box" style="max-height:85%">
+      <div class="cm-hdr">
+        <h3>📋 Chi tiết Đơn Lịch Sử</h3>
+        <button class="cm-x" id="cmClose">✕</button>
+      </div>
+      <div class="cm-body" style="gap:12px;max-height:70vh">
+        <div class="order-card" style="box-shadow:none;border-color:var(--border);width:100%;box-sizing:border-box">
+          <div class="oc-header ${isSh?'shopee-bg':'grab-bg'}" style="padding:12px 14px;display:flex;align-items:center">
+            <div class="oc-icon" style="font-size:24px;margin-right:10px">${order.emoji || '🍜'}</div>
+            <div class="oc-info" style="flex:1;text-align:left">
+              <div class="oc-rest" style="font-size:14px">${order.restaurant}</div>
+              <div class="oc-sub" style="font-size:10px;color:var(--t2)">${order.circleName || 'Nhóm'} · ${dateStr}</div>
+              <div style="margin-top:4px"><span class="status-chip ${order.status}">${statusVN(order.status)}</span></div>
+            </div>
+            <span class="oc-plat ${isSh?'shopeefood':'grab'}" style="font-size:8px;padding:3px 6px">${isSh?'SHOPEE':'GRAB'}</span>
+          </div>
+        </div>
+
+        ${locationHtml}
+
+        <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left">
+          <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:8px">👥 Thành viên tham gia (${ppl})</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${(order.participants || []).map(p => `
+              <div style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:3px 8px;font-size:10px">
+                <img src="${p.avatar || ''}" onerror="this.style.display='none'" style="width:16px;height:16px;border-radius:50%;object-fit:cover">
+                <span style="color:var(--t1)">${p.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="chat-col" style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:left">
+          <div style="font-size:11px;font-weight:800;color:var(--t2)">💬 Nhật ký trò chuyện</div>
+          <div class="chat-box" style="height:150px;max-height:150px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+            ${(order.messages || []).length === 0 
+              ? `<div class="no-items" style="margin:auto;font-size:10px;color:var(--t3)">Không có tin nhắn nào trong đơn gom này.</div>` 
+              : (order.messages || []).map(m => {
+                  const isMe = m.uid === currentUser?.uid;
+                  return `
+                    <div class="chat-msg ${isMe?'me':''}" style="margin:0;gap:6px;display:flex;align-items:flex-start">
+                      <img class="chat-msg-av" src="${m.avatar||''}" onerror="this.style.display='none'" style="width:20px;height:20px;border-radius:50%;object-fit:cover" alt="">
+                      <div class="chat-msg-body" style="gap:2px;display:flex;flex-direction:column">
+                        <div class="chat-msg-sender" style="font-size:9px;color:var(--t3)">${m.name.split(' ').pop()}</div>
+                        <div class="chat-msg-text" style="font-size:10px;padding:6px 10px;border-radius:10px">${m.text}</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+          </div>
+        </div>
+        
+        <button class="cm-cta" id="openLinkBtn" style="font-size:11px;padding:10px;width:100%">
+          🔗 Xem Link Gốc Trên Grab/ShopeeFood
+        </button>
+      </div>
+    </div>
+  `;
+  
+  scr.appendChild(scrim);
+  
+  scrim.querySelector('#cmClose').onclick = () => scrim.remove();
+  scrim.onclick = e => { if (e.target === scrim) scrim.remove(); };
+  scrim.querySelector('#openLinkBtn').onclick = () => {
+    window.open(ensureAbsoluteUrl(order.link), '_blank');
+  };
+  
+  const chatBox = scrim.querySelector('.chat-box');
+  if (chatBox) {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
