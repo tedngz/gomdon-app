@@ -191,7 +191,7 @@ function getUserLocation() {
     navigator.geolocation.getCurrentPosition(
       pos => { userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude}; resolve(userLocation); },
       err => reject(err),
-      {timeout:8000,enableHighAccuracy:true}
+      {timeout:5000,enableHighAccuracy:false}
     );
   });
 }
@@ -569,7 +569,22 @@ function subscribeToOrders() {
               if (hasShifted) {
                 console.log('Location shifted, updating Firestore. asHost:', isHost, lat, lng);
                 if (isHost) {
-                  db.collection('orders').doc(orderId).update({ lat, lng })
+                  const currentOrder = circleOrders.find(o => o.id === orderId);
+                  const updatedParticipants = currentOrder && currentOrder.participants
+                    ? currentOrder.participants.map(p => {
+                        if (p.uid === currentUser.uid) {
+                          return { ...p, lat, lng };
+                        }
+                        return p;
+                      })
+                    : [];
+                  
+                  const updateData = { lat, lng };
+                  if (updatedParticipants.length > 0) {
+                    updateData.participants = updatedParticipants;
+                  }
+                  
+                  db.collection('orders').doc(orderId).update(updateData)
                     .then(() => {
                       lastWrittenCoords = { lat, lng };
                     })
@@ -599,7 +614,7 @@ function subscribeToOrders() {
               }
             },
             err => console.warn('Location watch error:', err),
-            { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+            { enableHighAccuracy: false, maximumAge: 10000, timeout: 15000 }
           );
         }
       } else {
