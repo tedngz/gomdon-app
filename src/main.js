@@ -63,7 +63,7 @@ const themeIcon = () => theme === 'dark' ? '☀️' : '🌙';
 const firstName = () => currentUser?.displayName?.split(' ').pop() || 'bạn';
 const curCircle = () => myCircles.find(c => c.id === (localStorage.getItem('gd_last_used_circle_id') || '')) || myCircles[0] || null;
 const curOrder  = () => circleOrders.find(o => o.status === 'collecting') || null;
-const statusVN = s => ({collecting:'Đang Mở',delivered:'Đã Đóng',cancelled:'Đã Hủy'}[s]||s);
+const statusVN = s => ({collecting:'Đang Mở',closed:'Đang Giao',delivered:'Đã Đóng',cancelled:'Đã Hủy'}[s]||s);
 
 function ensureAbsoluteUrl(url) {
   if (!url) return '';
@@ -418,6 +418,10 @@ async function sendOrderMessage(orderId, text) {
   });
 }
 
+async function closeOrder(orderId) {
+  await db.collection('orders').doc(orderId).update({status:'closed'});
+}
+
 async function archiveOrder(orderId) {
   await db.collection('orders').doc(orderId).update({status:'delivered'});
 }
@@ -488,9 +492,13 @@ function subscribeToOrders() {
   }
   unsubOrders = db.collection('orders')
     .where('circleId', 'in', circleIds)
-    .where('status', '==', 'collecting')
+    .where('status', 'in', ['collecting', 'closed'])
     .onSnapshot(snap => {
-      circleOrders = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+      const allOrders = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+      circleOrders = allOrders.filter(o => {
+        const isParticipant = o.hostUid === currentUser?.uid || (o.participants || []).some(p => p.uid === currentUser?.uid);
+        return o.status === 'collecting' || (o.status === 'closed' && isParticipant);
+      });
       circleOrders.sort((a,b) => {
         const tA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date();
         const tB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date();
@@ -805,7 +813,7 @@ function renderHomeTab(body) {
   // Render sections for each circle
   content.innerHTML = myCircles.map(circle => {
     // Find all active orders for this circle
-    const orders = circleOrders.filter(o => o.circleId === circle.id && o.status === 'collecting');
+    const orders = circleOrders.filter(o => o.circleId === circle.id && (o.status === 'collecting' || o.status === 'closed'));
     
     return `
       <div class="circle-section" data-circle-id="${circle.id}">
@@ -842,7 +850,7 @@ function renderHomeTab(body) {
 
   // Render order cards inside their respective circle lists
   myCircles.forEach(circle => {
-    const orders = circleOrders.filter(o => o.circleId === circle.id && o.status === 'collecting');
+    const orders = circleOrders.filter(o => o.circleId === circle.id && (o.status === 'collecting' || o.status === 'closed'));
     if (orders.length > 0) {
       const listContainer = content.querySelector(`#circleOrdersList-${circle.id}`);
       if (listContainer) {
@@ -903,11 +911,19 @@ function renderActiveOrderCard(container, order) {
 
           <div class="order-actions" style="margin-top: 8px">
             ${isHost 
-              ? `<button class="btn-primary grab" id="closeOrderBtn" style="justify-content:center">🔒 Đóng đơn gom</button>
-                 <button class="btn-ghost" id="cancelOrderBtn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.2);justify-content:center">🗑️ Hủy đơn</button>` 
-              : isJoined 
-                ? `<button class="btn-ghost" id="leaveOrderBtn" style="width:100%;justify-content:center;color:#ff6b6b;border-color:rgba(255,107,107,0.2)">✕ Hủy tham gia</button>` 
-                : `<button class="btn-primary ${isSh?'shopee':'grab'}" id="joinOrderBtn" style="justify-content:center">🍜 Đăng ký tham gia</button>`
+              ? (order.status === 'closed'
+                ? `<button class="btn-primary grab" id="archiveOrderBtn" style="justify-content:center;background:linear-gradient(135deg,#10b981,#059669)">🏁 Giải tán đơn gom</button>
+                   <button class="btn-ghost" id="cancelOrderBtn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.2);justify-content:center">🗑️ Hủy đơn</button>`
+                : `<button class="btn-primary grab" id="closeOrderBtn" style="justify-content:center">🔒 Đóng đơn gom</button>
+                   <button class="btn-ghost" id="cancelOrderBtn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.2);justify-content:center">🗑️ Hủy đơn</button>`
+                )
+              : (order.status === 'closed'
+                ? `<button class="btn-ghost" style="width:100%;justify-content:center;color:var(--t3);border-color:var(--border)" disabled>🔒 Đơn hàng đã chốt</button>`
+                : (isJoined
+                  ? `<button class="btn-ghost" id="leaveOrderBtn" style="width:100%;justify-content:center;color:#ff6b6b;border-color:rgba(255,107,107,0.2)">✕ Hủy tham gia</button>` 
+                  : `<button class="btn-primary ${isSh?'shopee':'grab'}" id="joinOrderBtn" style="justify-content:center">🍜 Đăng ký tham gia</button>`
+                  )
+                )
             }
             <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:2px" id="shareBtn">🔗 Chia sẻ link nhóm</button>
           </div>
@@ -977,14 +993,30 @@ function renderActiveOrderCard(container, order) {
     };
   }
 
+  const archiveBtn = container.querySelector('#archiveOrderBtn');
+  if (archiveBtn) {
+    archiveBtn.onclick = async () => {
+      if (!confirm('Giải tán đơn gom này? Nó sẽ được lưu vào lịch sử.')) return;
+      archiveBtn.disabled = true;
+      try {
+        await archiveOrder(order.id);
+        toast('🏁 Đã hoàn thành đơn gom!');
+        renderApp();
+      } catch (e) {
+        archiveBtn.disabled = false;
+        toast('❌ ' + e.message);
+      }
+    };
+  }
+
   const closeBtn = container.querySelector('#closeOrderBtn');
   if (closeBtn) {
     closeBtn.onclick = async () => {
-      if (!confirm('Đóng đơn gom này? Thành viên sẽ không thể tham gia nữa.')) return;
+      if (!confirm('Đóng chốt đơn gom này? Thành viên cũ vẫn có thể chat, thành viên mới không thể tham gia nữa.')) return;
       closeBtn.disabled = true;
       try {
-        await archiveOrder(order.id);
-        toast('🔒 Đã đóng đơn gom!');
+        await closeOrder(order.id);
+        toast('🔒 Đã chốt đơn gom!');
         renderApp();
       } catch (e) {
         closeBtn.disabled = false;
