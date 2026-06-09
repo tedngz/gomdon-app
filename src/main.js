@@ -674,10 +674,7 @@ function renderApp() {
         <span class="bar-title">Gom Đơn</span>
       </div>
       <div class="bar-right">
-        <div class="bar-circle-pill" id="circleBtn">
-          <div class="bar-circle-dot"></div>
-          <span>${circle?.name||'Chọn nhóm'}</span>
-        </div>
+        <button class="bar-theme-toggle" id="manageCirclesBtn" title="Quản lý nhóm" style="font-size: 15px;">👥</button>
         <button class="bar-theme-toggle" id="themeToggleBtn">${themeIcon()}</button>
         <div class="bar-notif" id="notifBtn" title="Cài đặt cảnh báo">
           🔔
@@ -703,7 +700,7 @@ function renderApp() {
     btn.onclick=()=>{ currentTab=btn.dataset.tab; renderApp(); };
   });
   scr.querySelector('#fabCreate').onclick    = showCreateSheet;
-  scr.querySelector('#circleBtn').onclick    = showCircleModal;
+  scr.querySelector('#manageCirclesBtn').onclick = showCircleModal;
   scr.querySelector('#themeToggleBtn').onclick = toggleTheme;
   scr.querySelector('#notifBtn').onclick     = showAlertsSettingsSheet;
 
@@ -1460,7 +1457,15 @@ function showCreateSheet(circleId) {
     <div class="sheet-box">
       <div class="sh-handle"></div>
       <div class="sh-title">Tạo Đơn Gom 📢</div>
-      <div class="sh-sub">Mở link group order trong app Grab/ShopeeFood, sao chép and dán vào đây</div>
+      
+      <div style="margin-bottom: 8px">
+        <label style="font-size:10px;font-weight:800;color:var(--t3);display:block;margin-bottom:4px">Nhóm nhận đơn gom:</label>
+        <select class="cm-input" id="circleSelect" style="margin: 0; padding: 10px; font-size:12px; cursor: pointer; border-radius:10px;">
+          ${myCircles.map(c => `<option value="${c.id}" ${c.id === targetCircleId ? 'selected' : ''}>🏢 ${c.name}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="sh-sub" style="margin-top: 4px">Mở link group order trong app Grab/ShopeeFood, sao chép and dán vào đây</div>
       <div class="link-wrap">
         <input class="link-input" id="linkInput" placeholder="Dán link đơn nhóm Grab hoặc ShopeeFood vào đây…" autocomplete="off">
         <button class="link-paste" id="pasteBtn" title="Dán từ clipboard">📋</button>
@@ -1486,15 +1491,16 @@ function showCreateSheet(circleId) {
   scrim.onclick=e=>{ if(e.target===scrim) scrim.remove(); };
   scrim.querySelector('#broadcastBtn').onclick=async()=>{
     const link=scrim.querySelector('#linkInput').value.trim();
+    const selCircleId=scrim.querySelector('#circleSelect').value;
     if(!link){ toast('⚠️ Hãy dán link trước!'); return; }
-    if(!targetCircleId){ toast('⚠️ Bạn chưa chọn nhóm nào!'); return; }
+    if(!selCircleId){ toast('⚠️ Bạn chưa chọn nhóm nào!'); return; }
     const btn=scrim.querySelector('#broadcastBtn');
     btn.disabled=true; btn.innerHTML='<span>⏳ Đang tạo đơn…</span>';
     try{
       const platform=detectPlatform(link);
       let lat=null,lng=null;
       try{ const pos=await getUserLocation(); lat=pos.lat; lng=pos.lng; }catch(e){}
-      await createOrder(link,platform,lat,lng,targetCircleId);
+      await createOrder(link,platform,lat,lng,selCircleId);
       scrim.remove(); currentTab='home'; renderApp();
       setTimeout(()=>toast(`🍜 Đã mở đơn gom! Mọi người trong nhóm sẽ thấy ngay.`),300);
     }catch(e){
@@ -1518,11 +1524,10 @@ function showCircleModal() {
       <div class="cm-hdr"><h3>👥 Quản lý Nhóm</h3><button class="cm-x" id="cmClose">✕</button></div>
       <div class="cm-body">
         ${myCircles.length?`<div style="display:flex;flex-direction:column;gap:6px">
-          ${myCircles.map(c=>`<div class="ci-row ${c.id===currentCircleId?'sel':''}" data-id="${c.id}">
+          ${myCircles.map(c=>`<div class="ci-row" data-id="${c.id}" style="cursor:pointer">
             <div><div class="ci-name">${c.name}</div><div class="ci-loc">${c.location||''}</div></div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-              ${c.id===currentCircleId?'<span style="font-size:9px;color:var(--grab);font-weight:700">✓ Đang chọn</span>':'<span style="font-size:9px;color:var(--t3)">Chọn nhóm này</span>'}
-              ${c.inviteCode?`<span class="code-ic" data-ic="${c.inviteCode}" style="font-size:9px;color:var(--acc);font-weight:800;cursor:pointer;letter-spacing:1px">📋 ${c.inviteCode}</span>`:''}
+              ${c.inviteCode?`<span class="code-ic" data-ic="${c.inviteCode}" style="font-size:10px;color:var(--acc);font-weight:800;letter-spacing:1px;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:3px 8px">📋 Mã: ${c.inviteCode}</span>`:''}
             </div>
           </div>`).join('')}
         </div>`:'<div style="font-size:11px;color:var(--t3);text-align:center;padding:10px">Bạn chưa ở trong nhóm nào</div>'}
@@ -1546,14 +1551,12 @@ function showCircleModal() {
   scrim.onclick=e=>{ if(e.target===scrim) scrim.remove(); };
   scrim.querySelectorAll('.ci-row').forEach(el=>{
     el.onclick=()=>{
-      currentCircleId=el.dataset.id;
-      db?.collection('users').doc(currentUser.uid).update({lastCircleId:el.dataset.id}).catch(()=>{});
-      subscribeToOrders(); currentTab='home'; scrim.remove(); renderApp();
-      toast(`✅ Chuyển sang: ${myCircles.find(c=>c.id===el.dataset.id)?.name}`);
+      const code = el.querySelector('.code-ic')?.dataset.ic;
+      if (code) {
+        navigator.clipboard?.writeText(code);
+        toast('📋 Đã sao chép mã mời: ' + code);
+      }
     };
-  });
-  scrim.querySelectorAll('.code-ic').forEach(el=>{
-    el.onclick=e=>{ e.stopPropagation(); navigator.clipboard?.writeText(el.dataset.ic); toast('📋 Đã sao chép mã mời!'); };
   });
   scrim.querySelector('#joinCodeBtn').onclick=async()=>{
     const code=scrim.querySelector('#joinCodeInput').value.trim();
