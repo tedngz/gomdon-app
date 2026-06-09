@@ -120,6 +120,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
 
 /* ── BOTTOM NAV ─────────────────────────────────────────── */
 .bottom-nav{flex-shrink:0;background:var(--nav-bg);backdrop-filter:blur(20px) saturate(1.5);border-top:1px solid var(--nav-border);padding:8px 8px calc(8px + var(--safe-bottom));display:flex;justify-content:space-around;align-items:flex-end;z-index:30;transition:background .35s}
+.sidebar-brand { display: none; }
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 12px;border-radius:14px;transition:all .2s;min-width:52px;border:none;background:transparent}
 .nav-item:hover{background:var(--nav-hover)}
 .nav-item .ni-icon{font-size:20px;transition:transform .2s}
@@ -579,19 +580,33 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Add brand title at top of sidebar */
-  .bottom-nav::before {
-    content: '🍜 Gom Đơn';
+  /* Sidebar brand logo & title at top */
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 0 25px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 25px;
+    order: -2; /* Sits above the FAB (+ Tạo Đơn Gom Mới) which has order: -1 */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar-brand img {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .sidebar-brand span {
     font-size: 20px;
     font-weight: 900;
     color: var(--t1);
-    padding: 10px 0 25px;
-    display: block;
-    text-align: center;
-    width: 100%;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 25px;
-    transition: content 0.3s ease, font-size 0.3s ease;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.2s ease;
   }
 
   /* Rearrange items vertically inside sidebar */
@@ -671,11 +686,18 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
     padding: 30px 10px;
   }
 
-  .collapsed .bottom-nav::before {
-    content: '🍜';
-    font-size: 24px;
+  .collapsed .sidebar-brand {
     padding: 10px 0 15px;
     margin-bottom: 15px;
+    justify-content: center;
+  }
+
+  .collapsed .sidebar-brand span {
+    display: none;
+  }
+
+  .collapsed .sidebar-brand img {
+    height: 32px;
   }
 
   .collapsed .nav-item .ni-label {

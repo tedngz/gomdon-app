@@ -677,6 +677,10 @@ function renderApp() {
     </div>
     <div class="screen-body" id="screenBody"></div>
     <nav class="bottom-nav">
+      <div class="sidebar-brand">
+        <img src="/logo.png" alt="Gom Đơn Logo">
+        <span>Gom Đơn</span>
+      </div>
       <button class="nav-item ${currentTab==='home'?'on':''}" data-tab="home"><span class="ni-icon">🏠</span><span class="ni-label">Nhóm</span></button>
       <button class="nav-item ${currentTab==='nearby'?'on':''}" data-tab="nearby"><span class="ni-icon">📍</span><span class="ni-label">Gần Đây</span></button>
       <button class="nav-fab" id="fabCreate">＋</button>
