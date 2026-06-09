@@ -880,6 +880,15 @@ function renderActiveOrderCard(container, order) {
             🚀 Mở Grab/Shopee &amp; Chọn Món
           </button>
           
+          ${order.lat && order.lng 
+            ? `
+              <a href="https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}" target="_blank" class="btn-ghost" style="width:100%;justify-content:center;margin-bottom:8px;font-size:11px;font-weight:700;color:${isSh?'var(--shopee)':'var(--grab)'};border-color:${isSh?'rgba(238,77,45,0.25)':'rgba(0,177,79,0.25)'};text-decoration:none;display:flex;align-items:center;gap:6px">
+                📍 Vị trí giao của Host (Bản đồ)
+              </a>
+            ` 
+            : ''
+          }
+          
           <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px">
             <div style="font-size:11px;font-weight:800;color:var(--t1);margin-bottom:8px">👥 Thành viên (${ppl})</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center" id="participantsList">
@@ -1503,7 +1512,7 @@ function showCreateSheet(circleId) {
       
       <div style="margin-bottom: 8px; margin-top: 4px">
         <label style="font-size:10px;font-weight:800;color:var(--t3);display:block;margin-bottom:4px">Tên quán ăn / Tiêu đề đơn gom:</label>
-        <input class="cm-input" id="restaurantTitleInput" placeholder="Tên quán ăn (tự động nhận diện khi dán link)" style="margin: 0; padding: 10px; font-size:12px;" autocomplete="off">
+        <input class="cm-input" id="restaurantTitleInput" placeholder="Tên quán ăn (tự động nhận diện khi dán link)" value="Đơn gom của ${firstName()}" style="margin: 0; padding: 10px; font-size:12px;" autocomplete="off">
       </div>
 
       <div class="plat-chips">
