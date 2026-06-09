@@ -1035,16 +1035,23 @@ function renderActiveOrderCard(container, order) {
             
             if (isHost) {
               return `
-                <div class="live-location-badge host" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
-                  <div style="display:flex;align-items:center;gap:8px">
-                    ${isLive ? '<span class="live-dot"></span>' : '📍'}
-                    <strong style="color:var(--t1)">
-                      ${isLive ? 'Vị trí của bạn đang được chia sẻ trực tiếp' : 'Địa chỉ giao hàng (Mặc định)'}
-                    </strong>
+                <div class="live-location-badge host" style="margin-bottom:8px;display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
+                  <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      ${isLive ? '<span class="live-dot"></span>' : '📍'}
+                      <strong style="color:var(--t1)">
+                        ${isLive ? 'Vị trí của bạn đang được chia sẻ trực tiếp' : 'Địa chỉ giao hàng (Mặc định)'}
+                      </strong>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}" target="_blank" style="font-weight:700;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
+                      📍 Xem bản đồ
+                    </a>
                   </div>
-                  <a href="https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}" target="_blank" style="font-weight:700;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
-                    📍 Xem bản đồ
-                  </a>
+                  ${!isLive ? `
+                    <button id="enableGpsBtn" class="btn-primary ${isSh?'shopee':'grab'}" style="font-size:11px;padding:6px 12px;width:100%;justify-content:center;margin-top:4px">
+                      📡 Chia sẻ vị trí trực tiếp của bạn
+                    </button>
+                  ` : ''}
                 </div>
                 <div id="active-order-map-${order.id}" class="compact-map" style="width: 100%; height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
               `;
@@ -1291,6 +1298,40 @@ function renderActiveOrderCard(container, order) {
     if (navigator.share) navigator.share({ title: 'Gom Đơn', text: msg });
     else { navigator.clipboard?.writeText(ensureAbsoluteUrl(order.link)); toast('📋 Đã copy link đặt món!'); }
   };
+
+  const enableGpsBtn = container.querySelector('#enableGpsBtn');
+  if (enableGpsBtn) {
+    enableGpsBtn.onclick = async () => {
+      enableGpsBtn.disabled = true;
+      enableGpsBtn.innerHTML = '<span>⏳ Đang định vị...</span>';
+      try {
+        const pos = await getUserLocation();
+        const lat = pos.lat;
+        const lng = pos.lng;
+        
+        // Update both top-level and participant list coordinates
+        const updatedParticipants = (order.participants || []).map(p => {
+          if (p.uid === currentUser.uid) {
+            return { ...p, lat, lng };
+          }
+          return p;
+        });
+        
+        await db.collection('orders').doc(order.id).update({
+          lat,
+          lng,
+          participants: updatedParticipants
+        });
+        
+        toast('📡 Đã chia sẻ vị trí trực tiếp!');
+        renderApp();
+      } catch (err) {
+        enableGpsBtn.disabled = false;
+        enableGpsBtn.innerHTML = '<span>📡 Chia sẻ vị trí trực tiếp của bạn</span>';
+        toast('❌ Lỗi định vị: ' + (err.message || err));
+      }
+    };
+  }
 
   const chatInput = container.querySelector('#chatInput');
   const chatSendBtn = container.querySelector('#chatSendBtn');
@@ -1845,8 +1886,9 @@ function showCreateSheet(circleId) {
     btn.disabled=true; btn.innerHTML='<span>⏳ Đang tạo đơn…</span>';
     try{
       const platform=detectPlatform(link);
-      let lat=null,lng=null;
-      try{ const pos=await getUserLocation(); lat=pos.lat; lng=pos.lng; }catch(e){}
+      // Fast creation: use cached userLocation if available to avoid blocking on browser prompts
+      const lat = userLocation ? userLocation.lat : null;
+      const lng = userLocation ? userLocation.lng : null;
       await createOrder(link,platform,lat,lng,selCircleId,customTitle);
       scrim.remove(); currentTab='home'; renderApp();
       setTimeout(()=>toast(`🍜 Đã mở đơn gom! Mọi người trong nhóm sẽ thấy ngay.`),300);
