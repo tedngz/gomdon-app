@@ -1055,58 +1055,71 @@ function renderActiveOrderCard(container, order) {
 
   // Initialize Leaflet Map
   const mapDiv = container.querySelector(`#active-order-map-${order.id}`);
-  if (mapDiv && window.L) {
-    setTimeout(() => {
-      try {
-        const map = L.map(mapDiv, {
-          center: [order.lat, order.lng],
-          zoom: 16,
-          zoomControl: false,
-          attributionControl: false,
-          dragging: false,
-          touchZoom: false,
-          doubleClickZoom: false,
-          scrollWheelZoom: false,
-          boxZoom: false,
-          keyboard: false
-        });
-        
-        const isDark = theme === 'dark';
-        const tileUrl = isDark 
-          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-          : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-          
-        L.tileLayer(tileUrl, {
-          maxZoom: 19
-        }).addTo(map);
-        
-        const hostIcon = L.divIcon({
-          html: `<div class="map-host-marker-pin ${isSh ? 'shopee' : 'grab'}">${order.emoji || '🍜'}</div>`,
-          className: 'custom-map-marker',
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
-        });
-        
-        L.marker([order.lat, order.lng], { icon: hostIcon }).addTo(map);
-        
-        if (!isHost && userLocation) {
-          const guestIcon = L.divIcon({
-            html: `<div class="map-guest-marker-pin">👤</div>`,
-            className: 'custom-map-marker',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+  if (mapDiv) {
+    const initMap = (retries = 5) => {
+      if (window.L) {
+        try {
+          const map = L.map(mapDiv, {
+            center: [order.lat, order.lng],
+            zoom: 16,
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            touchZoom: false,
+            doubleClickZoom: false,
+            scrollWheelZoom: false,
+            boxZoom: false,
+            keyboard: false
           });
-          L.marker([userLocation.lat, userLocation.lng], { icon: guestIcon }).addTo(map);
           
-          map.fitBounds([
-            [order.lat, order.lng],
-            [userLocation.lat, userLocation.lng]
-          ], { padding: [15, 15] });
+          const isDark = theme === 'dark';
+          const tileUrl = isDark 
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+            
+          L.tileLayer(tileUrl, {
+            maxZoom: 19
+          }).addTo(map);
+          
+          const hostIcon = L.divIcon({
+            html: `<div class="map-host-marker-pin ${isSh ? 'shopee' : 'grab'}">${order.emoji || '🍜'}</div>`,
+            className: 'custom-map-marker',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          });
+          
+          L.marker([order.lat, order.lng], { icon: hostIcon }).addTo(map);
+          
+          if (!isHost && userLocation) {
+            const guestIcon = L.divIcon({
+              html: `<div class="map-guest-marker-pin">👤</div>`,
+              className: 'custom-map-marker',
+              iconSize: [20, 20],
+              iconAnchor: [10, 10]
+            });
+            L.marker([userLocation.lat, userLocation.lng], { icon: guestIcon }).addTo(map);
+            
+            map.fitBounds([
+              [order.lat, order.lng],
+              [userLocation.lat, userLocation.lng]
+            ], { padding: [15, 15] });
+          }
+          
+          // Force Leaflet to recalculate map container size after a short delay
+          setTimeout(() => {
+            map.invalidateSize();
+          }, 200);
+          
+        } catch (e) {
+          console.warn('Error initializing Leaflet map:', e);
         }
-      } catch (e) {
-        console.warn('Error initializing map:', e);
+      } else if (retries > 0) {
+        console.log('Leaflet not loaded yet, retrying map initialization...');
+        setTimeout(() => initMap(retries - 1), 500);
       }
-    }, 100);
+    };
+    // Initialize after a short timeout to let DOM render
+    setTimeout(() => initMap(), 100);
   }
 
   container.querySelector('#openAppBtn').onclick = () => {
@@ -1374,7 +1387,7 @@ async function renderHistoryTab(body) {
 function displayHistory(body, history) {
   const filtered = history.filter(o => {
     const isHost = o.hostUid === currentUser?.uid;
-    const isMember = (o.items || []).some(it => it.uid === currentUser?.uid);
+    const isMember = (o.participants || []).some(p => p.uid === currentUser?.uid);
     if (historyFilter === 'host') return isHost;
     if (historyFilter === 'joined') return isMember;
     return isHost || isMember;
