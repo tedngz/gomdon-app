@@ -878,11 +878,50 @@ function renderApp() {
         <img src="/logo.png" alt="Gom Đơn Logo">
         <span>Gom Đơn</span>
       </div>
-      <button class="nav-item ${currentTab==='home'?'on':''}" data-tab="home"><span class="ni-icon">🏠</span><span class="ni-label">Nhóm</span></button>
-      <button class="nav-item ${currentTab==='nearby'?'on':''}" data-tab="nearby"><span class="ni-icon">📍</span><span class="ni-label">Gần Đây</span></button>
-      <button class="nav-fab" id="fabCreate">＋</button>
-      <button class="nav-item ${currentTab==='history'?'on':''}" data-tab="history"><span class="ni-icon">📋</span><span class="ni-label">Lịch Sử</span></button>
-      <button class="nav-item ${currentTab==='profile'?'on':''}" data-tab="profile"><span class="ni-icon">👤</span><span class="ni-label">Tôi</span></button>
+      <button class="nav-item ${currentTab==='home'?'on':''}" data-tab="home">
+        <span class="ni-icon">
+          <svg class="ni-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </span>
+        <span class="ni-label">HOME</span>
+      </button>
+      <button class="nav-item ${currentTab==='nearby'?'on':''}" data-tab="nearby">
+        <span class="ni-icon">
+          <svg class="ni-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6" stroke-dasharray="3 3"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+          </svg>
+        </span>
+        <span class="ni-label">RADAR</span>
+      </button>
+      <button class="nav-fab" id="fabCreate">
+        <svg class="fab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+      <button class="nav-item ${currentTab==='history'?'on':''}" data-tab="history">
+        <span class="ni-icon">
+          <svg class="ni-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 2v20l3-1.5 3 1.5 3-1.5 3 1.5 3-1.5 3 1.5V2l-3 1.5-3-1.5-3 1.5-3-1.5-3 1.5-3-1.5z"></path>
+            <path d="M8 8h8M8 12h8M8 16h5"></path>
+          </svg>
+        </span>
+        <span class="ni-label">ORDERS</span>
+      </button>
+      <button class="nav-item ${currentTab==='profile'?'on':''}" data-tab="profile">
+        <span class="ni-icon">
+          <svg class="ni-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </span>
+        <span class="ni-label">PROFILE</span>
+      </button>
       <button class="sidebar-toggle-btn" id="sidebarCollapseBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="toggle-icon"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
     </nav>
     <div class="toast-stack"></div>`;
