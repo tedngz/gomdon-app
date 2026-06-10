@@ -659,7 +659,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
     padding: 0;
     border-bottom: 1px solid var(--border);
     margin-bottom: 25px;
-    order: -2; /* Sits above the FAB (+ Tạo Đơn Gom Mới) which has order: -1 */
+    order: 1 !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -827,7 +827,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
 
   /* Rearrange FAB (Create order) to sit at the top of items list */
   .nav-fab {
-    order: -1; /* Place at the top of nav items */
+    order: 2 !important;
     width: 100%;
     height: 48px;
     border-radius: 12px;
@@ -855,6 +855,23 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
     font-size: 14px;
     font-weight: 800;
     color: #000;
+  }
+
+  /* Explicit Desktop Sidebar Nav Ordering */
+  .nav-item[data-tab="home"] {
+    order: 3 !important;
+  }
+  .nav-item[data-tab="nearby"] {
+    order: 4 !important;
+  }
+  .nav-item[data-tab="history"] {
+    order: 5 !important;
+  }
+  .nav-item[data-tab="profile"] {
+    order: 6 !important;
+  }
+  .sidebar-toggle-btn {
+    order: 7 !important;
   }
 
   /* App bar adjustments */

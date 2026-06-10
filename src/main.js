@@ -885,7 +885,7 @@ function renderApp() {
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
           </svg>
         </span>
-        <span class="ni-label">HOME</span>
+        <span class="ni-label">Trang Chủ</span>
       </button>
       <button class="nav-item ${currentTab==='nearby'?'on':''}" data-tab="nearby">
         <span class="ni-icon">
@@ -896,7 +896,7 @@ function renderApp() {
             <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
           </svg>
         </span>
-        <span class="ni-label">RADAR</span>
+        <span class="ni-label">Radar</span>
       </button>
       <button class="nav-fab" id="fabCreate">
         <svg class="fab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -911,7 +911,7 @@ function renderApp() {
             <path d="M8 8h8M8 12h8M8 16h5"></path>
           </svg>
         </span>
-        <span class="ni-label">ORDERS</span>
+        <span class="ni-label">Lịch Sử</span>
       </button>
       <button class="nav-item ${currentTab==='profile'?'on':''}" data-tab="profile">
         <span class="ni-icon">
@@ -920,7 +920,7 @@ function renderApp() {
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
         </span>
-        <span class="ni-label">PROFILE</span>
+        <span class="ni-label">Cá Nhân</span>
       </button>
       <button class="sidebar-toggle-btn" id="sidebarCollapseBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="toggle-icon"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
     </nav>
