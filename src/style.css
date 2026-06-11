@@ -1004,6 +1004,13 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
   .oc-right-col {
     grid-column: 2;
     gap: 12px;
+    min-height: 0;
+  }
+
+  .chat-col {
+    height: auto;
+    flex: 1;
+    min-height: 0;
   }
 
   .oc-right-col > .items-list {
@@ -1230,8 +1237,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
 .chat-col {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 250px;
+  height: 300px;
 }
 
 .chat-box {
