@@ -71,6 +71,41 @@ const curCircle = () => myCircles.find(c => c.id === (localStorage.getItem('gd_l
 const curOrder  = () => circleOrders.find(o => o.status === 'collecting') || null;
 const statusVN = s => ({collecting:'Đang Mở',closed:'Đang Giao',delivered:'Đã Đóng',cancelled:'Đã Hủy'}[s]||s);
 
+/* ── SVG ICON LIBRARY ──────────────────────────────────────── */
+const ICO = {
+  people:  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  radar:   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+  pin:     `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  bell:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+  bellOff: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
+  megaphone:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>`,
+  send:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>`,
+  warning: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  clipboard:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>`,
+  list:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+  lock:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  trash:   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+  refresh: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`,
+  link:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+  share:   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
+  building:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+  gear:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  gift:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>`,
+  logout:  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+  user:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  chat:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  info:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  chart:   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  noodle:  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+  crown:   `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M5 20l2-10 5 6 5-6 2 10"/></svg>`,
+  flag:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
+  sunrise: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg>`,
+  clock:   `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  sunset:  `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/></svg>`,
+  open:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+};
+
+
 function ensureAbsoluteUrl(url) {
   if (!url) return '';
   url = url.trim();
@@ -900,7 +935,7 @@ function renderApp() {
             <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
           </svg>
         </span>
-        <span class="ni-label">Radar</span>
+        <span class="ni-label">Quanh Đây</span>
       </button>
       <div class="nav-fab-slot">
         <button class="nav-fab" id="fabCreate">
@@ -1106,11 +1141,11 @@ function renderActiveOrderCard(container, order) {
               return `
                 <div class="live-location-badge guest" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
                   <div style="display:flex;align-items:center;gap:8px">
-                    ${isLive ? '<span class="live-dot"></span>' : '📍'}
+                    ${isLive ? '<span class="live-dot"></span>' : ICO.pin}
                     <strong style="color:var(--t1)">${isLive ? 'Trực tiếp' : 'Địa điểm nhóm'}</strong>
                   </div>
                   <a href="https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}" target="_blank" style="font-weight:800;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
-                    📍 Xem bản đồ (${distanceStr})
+                    ${ICO.pin} Xem bản đồ (${distanceStr})
                   </a>
                 </div>
                 <div id="active-order-map-${order.id}" class="compact-map" style="width: 100%; height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
@@ -1119,7 +1154,7 @@ function renderActiveOrderCard(container, order) {
           })()}
           
           <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px">
-            <div style="font-size:11px;font-weight:800;color:var(--t1);margin-bottom:8px">👥 Thành viên (${ppl})</div>
+            <div style="font-size:11px;font-weight:800;color:var(--t1);margin-bottom:8px;display:flex;align-items:center;gap:6px">${ICO.people} Thành viên (${ppl})</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center" id="participantsList">
               ${(order.participants || []).map(p => `
                 <div style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:3px 8px;font-size:10px">
@@ -1133,24 +1168,24 @@ function renderActiveOrderCard(container, order) {
           <div class="order-actions" style="margin-top: 8px">
             ${isHost 
               ? (order.status === 'closed'
-                ? `<button class="btn-primary grab" id="archiveOrderBtn" style="justify-content:center;background:linear-gradient(135deg,#10b981,#059669)">🏁 Giải tán đơn gom</button>
-                   <button class="btn-ghost" id="cancelOrderBtn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.2);justify-content:center">🗑️ Hủy đơn</button>`
-                : `<button class="btn-primary grab" id="closeOrderBtn" style="justify-content:center">🔒 Đóng đơn gom</button>
-                   <button class="btn-ghost" id="cancelOrderBtn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.2);justify-content:center">🗑️ Hủy đơn</button>`
+                ? `<button class="btn-primary grab" id="archiveOrderBtn" style="justify-content:center;background:linear-gradient(135deg,#10b981,#059669)">${ICO.flag} Giải tán đơn gom</button>
+                   <button class="btn-ghost" id="cancelOrderBtn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.2);justify-content:center">${ICO.trash} Hủy đơn</button>`
+                : `<button class="btn-primary grab" id="closeOrderBtn" style="justify-content:center">${ICO.lock} Đóng đơn gom</button>
+                   <button class="btn-ghost" id="cancelOrderBtn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.2);justify-content:center">${ICO.trash} Hủy đơn</button>`
                 )
               : (order.status === 'closed'
-                ? `<button class="btn-ghost" style="width:100%;justify-content:center;color:var(--t3);border-color:var(--border)" disabled>🔒 Đơn hàng đã chốt</button>`
+                ? `<button class="btn-ghost" style="width:100%;justify-content:center;color:var(--t3);border-color:var(--border)" disabled>${ICO.lock} Đơn hàng đã chốt</button>`
                 : (isJoined
                   ? `<button class="btn-ghost" id="leaveOrderBtn" style="width:100%;justify-content:center;color:#ff6b6b;border-color:rgba(255,107,107,0.2)">✕ Hủy tham gia</button>` 
-                  : `<button class="btn-primary ${isSh?'shopee':'grab'}" id="joinOrderBtn" style="justify-content:center">🍜 Đăng ký tham gia</button>`
+                  : `<button class="btn-primary ${isSh?'shopee':'grab'}" id="joinOrderBtn" style="justify-content:center">${ICO.open} Đăng ký tham gia</button>`
                   )
                 )
             }
-            <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:2px" id="shareBtn">🔗 Chia sẻ link nhóm</button>
+            <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:2px" id="shareBtn">${ICO.share} Chia sẻ link nhóm</button>
           </div>
         </div>
         <div class="oc-right-col chat-col">
-          <div style="font-size:11px;font-weight:800;color:var(--t1);margin-bottom:4px">💬 Trò chuyện nhóm</div>
+          <div style="font-size:11px;font-weight:800;color:var(--t1);margin-bottom:4px;display:flex;align-items:center;gap:5px">${ICO.chat} Trò chuyện nhóm</div>
           <div class="chat-box" id="chatBox">
             ${(order.messages || []).length === 0 
               ? `<div class="no-items" style="margin:auto">Chưa có tin nhắn nào. Chat để hẹn địa điểm và ck tiền nhé!</div>` 
@@ -1424,7 +1459,7 @@ async function renderNearbyTab(body) {
   body.className = 'nearby-body';
   body.innerHTML = `
     <div class="radar-hdr">
-      <div class="radar-ico">📡</div>
+      <div class="radar-ico">${ICO.radar}</div>
       <div class="radar-text"><h4>Đang tìm đơn…</h4><p>Đang kết nối máy chủ…</p></div>
       <div class="radar-count">…</div>
     </div>
@@ -1437,13 +1472,13 @@ async function renderNearbyTab(body) {
     body.className = 'nearby-body';
     body.innerHTML = `
       <div class="radar-hdr" style="border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.04)">
-        <div class="radar-ico" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25)">⚠️</div>
+        <div class="radar-ico" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25)">${ICO.warning}</div>
         <div class="radar-text">
           <h4 style="color:var(--t1)">Không tải được đơn</h4>
           <p>${e.message && e.message.includes('index') ? 'Firestore đang chuẩn bị — thử lại sau vài giây' : (e.message||'Lỗi kết nối')}</p>
         </div>
       </div>
-      <button class="bcast-btn" style="margin-top:4px;font-size:13px" onclick="currentTab='nearby';renderApp()">🔄 Thử lại</button>`;
+      <button class="bcast-btn" style="margin-top:4px;font-size:13px" onclick="currentTab='nearby';renderApp()">${ICO.refresh} Thử lại</button>`;
   }
 }
 
@@ -1455,18 +1490,18 @@ function displayNearby(body) {
   });
   body.innerHTML = `
     <div class="radar-hdr">
-      <div class="radar-ico">📡</div>
+      <div class="radar-ico">${ICO.radar}</div>
       <div class="radar-text"><h4>Đơn gom trong ${alertRadius}m</h4><p>${filtered.length} đơn đang mở${userLocation?'':' (vị trí chưa xác định)'}</p></div>
       <div class="radar-count">${filtered.length}</div>
     </div>
     <div class="nearby-filters">
-      <button class="nf-chip ${nearbyFilter==='all'?'on':''}" data-f="all">🗂️ Tất cả</button>
+      <button class="nf-chip ${nearbyFilter==='all'?'on':''}" data-f="all">${ICO.list} Tất cả</button>
       <button class="nf-chip ${nearbyFilter==='grab'?'on':''}" data-f="grab">🍜 GrabFood</button>
       <button class="nf-chip ${nearbyFilter==='shopee'?'on':''}" data-f="shopee">🧋 ShopeeFood</button>
     </div>
     <div id="nbList">
       ${filtered.length===0
-        ?`<div class="empty-state" style="min-height:160px"><div class="es-icon">📡</div><div class="es-title">Không có đơn trong ${alertRadius}m</div><div class="es-desc">Tăng bán kính tìm kiếm hoặc chờ bạn bè mở đơn mới.</div></div>`
+        ?`<div class="empty-state" style="min-height:160px"><div class="es-icon">${ICO.radar}</div><div class="es-title">Không có đơn trong ${alertRadius}m</div><div class="es-desc">Tăng bán kính tìm kiếm hoặc chờ bạn bè mở đơn mới.</div></div>`
         :filtered.map(o=>buildNearbyCard(o)).join('')
       }
     </div>`;
@@ -1499,8 +1534,8 @@ function displayNearby(body) {
   body.querySelectorAll('.nc-bell').forEach(btn=>{
     btn.onclick=()=>{
       const o=nearbyOrders.find(n=>n.id===btn.dataset.id); if(!o) return;
-      o._alert=!o._alert; btn.textContent=o._alert?'🔔':'🔕'; btn.classList.toggle('active',o._alert);
-      toast(o._alert?`🔔 Bật cảnh báo cho ${o.restaurant}`:'🔕 Tắt cảnh báo');
+      o._alert=!o._alert; btn.innerHTML=o._alert?ICO.bell:ICO.bellOff; btn.classList.toggle('active',o._alert);
+      toast(o._alert?`Bật cảnh báo cho ${o.restaurant}`:'Tắt cảnh báo');
     };
   });
 }
@@ -1521,11 +1556,11 @@ function buildNearbyCard(o) {
       </div>
     </div>
     <div class="nc-prog" style="border-bottom:none">
-      <div class="nc-prog-row" style="margin-top:0"><span class="nc-ppl">👥 ${ppl} người đang tham gia</span></div>
+      <div class="nc-prog-row" style="margin-top:0"><span class="nc-ppl">${ICO.people} ${ppl} người đang tham gia</span></div>
     </div>
     <div class="nc-actions">
-      <button class="nc-join ${isSh?'shopee':'grab'}" data-id="${o.id}">🍜 Mở App &amp; Tham Gia</button>
-      <div class="nc-bell ${o._alert?'active':''}" data-id="${o.id}">${o._alert?'🔔':'🔕'}</div>
+      <button class="nc-join ${isSh?'shopee':'grab'}" data-id="${o.id}">${ICO.open} Mở App &amp; Tham Gia</button>
+      <div class="nc-bell ${o._alert?'active':''}" data-id="${o.id}">${o._alert?ICO.bell:ICO.bellOff}</div>
     </div>
   </div>`;
 }
@@ -1540,7 +1575,7 @@ async function renderHistoryTab(body) {
   body.className = 'history-body';
   body.innerHTML = `
     <div class="history-hdr">
-      <div class="history-ico">📋</div>
+      <div class="history-ico">${ICO.list}</div>
       <div class="history-text"><h4>Lịch sử đơn gom</h4><p>Danh sách các đơn gom bạn đã tham gia hoặc tự mở</p></div>
     </div>
     <div style="text-align:center;padding:40px;color:var(--t3);font-size:11px">Đang tải lịch sử…</div>`;
@@ -1550,13 +1585,13 @@ async function renderHistoryTab(body) {
   } catch(e) {
     body.innerHTML = `
       <div class="history-hdr" style="border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.04)">
-        <div class="history-ico" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25)">⚠️</div>
+        <div class="history-ico" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25)">${ICO.warning}</div>
         <div class="history-text">
           <h4 style="color:var(--t1)">Không tải được lịch sử</h4>
           <p>${e.message||'Lỗi kết nối'}</p>
         </div>
       </div>
-      <button class="bcast-btn" style="margin-top:4px;font-size:13px" onclick="currentTab='history';renderApp()">🔄 Thử lại</button>`;
+      <button class="bcast-btn" style="margin-top:4px;font-size:13px" onclick="currentTab='history';renderApp()">${ICO.refresh} Thử lại</button>`;
   }
 }
 
@@ -1571,23 +1606,23 @@ function displayHistory(body, history) {
   
   body.innerHTML = `
     <div class="history-hdr">
-      <div class="history-ico">📋</div>
+      <div class="history-ico">${ICO.list}</div>
       <div class="history-text"><h4>Lịch sử đơn gom</h4><p>Tổng số ${filtered.length} đơn</p></div>
     </div>
     <div class="history-filters">
-      <button class="hf-chip ${historyFilter==='all'?'on':''}" data-f="all">🗂️ Tất cả</button>
-      <button class="hf-chip ${historyFilter==='host'?'on':''}" data-f="host">👑 Tôi gom</button>
-      <button class="hf-chip ${historyFilter==='joined'?'on':''}" data-f="joined">🍜 Tôi chung</button>
+      <button class="hf-chip ${historyFilter==='all'?'on':''}" data-f="all">${ICO.list} Tất cả</button>
+      <button class="hf-chip ${historyFilter==='host'?'on':''}" data-f="host">${ICO.crown} Tôi gom</button>
+      <button class="hf-chip ${historyFilter==='joined'?'on':''}" data-f="joined">${ICO.open} Tôi chung</button>
     </div>
     <div id="histList">
       ${filtered.length===0
-        ? `<div class="empty-state" style="min-height:160px"><div class="es-icon">📋</div><div class="es-title">Chưa có đơn gom nào</div><div class="es-desc">Các đơn hàng bạn gom chung hoặc tự gom sẽ hiển thị ở đây.</div></div>`
+        ? `<div class="empty-state" style="min-height:160px"><div class="es-icon">${ICO.list}</div><div class="es-title">Chưa có đơn gom nào</div><div class="es-desc">Các đơn hàng bạn gom chung hoặc tự gom sẽ hiển thị ở đây.</div></div>`
         : filtered.map(o => buildHistoryCard(o)).join('')
       }
     </div>
     <div class="history-summary-col">
       <div class="alert-settings-card" style="margin-top:0">
-        <div class="asc-title">📊 Tổng Quan Lịch Sử</div>
+        <div class="asc-title" style="display:flex;align-items:center;gap:6px">${ICO.chart} Tổng Quan Lịch Sử</div>
         <div class="settings-row" style="padding: 10px 0; border-bottom: 1px solid var(--row-border)">
           <div class="sr-label">Đơn đã tham gia</div>
           <div style="font-weight:800;color:var(--t1)">${userProfile?.stats?.ordersJoined||0}</div>
@@ -1623,8 +1658,8 @@ function buildHistoryCard(o) {
   const ppl = (o.participants || []).length;
   const isSh = o.platform === 'shopeefood';
   const roleBadge = isHost 
-    ? `<span class="hc-role host">Host 👑</span>` 
-    : `<span class="hc-role member">Chung 🍜</span>`;
+    ? `<span class="hc-role host">${ICO.crown} Host</span>` 
+    : `<span class="hc-role member">${ICO.open} Tôi chung</span>`;
   
   let myOrderText = isHost ? 'Chủ đơn (Gom món)' : 'Thành viên tham gia';
 
@@ -1644,7 +1679,7 @@ function buildHistoryCard(o) {
       </div>
       <div class="hc-body-row">
         <div class="hc-stats">
-          <span>👥 ${ppl} người</span>
+          <span style="display:inline-flex;align-items:center;gap:4px">${ICO.people} ${ppl} người</span>
         </div>
         ${roleBadge}
       </div>
@@ -1683,10 +1718,10 @@ function renderProfileTab(body) {
         <div class="section-label">Nhóm của tôi</div>
         ${myCircles.map(c=>`
           <div class="circle-item-row" data-cid="${c.id}" data-code="${c.inviteCode||''}">
-            <div class="cir-icon">🏢</div>
+            <div class="cir-icon">${ICO.building}</div>
             <div class="cir-info"><div class="cir-name">${c.name}</div><div class="cir-loc">${c.location||''}</div></div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-              ${c.inviteCode?'<span class="code-copy" data-code="'+c.inviteCode+'" style="font-size:9px;color:var(--acc);font-weight:800;cursor:pointer;letter-spacing:1px">📋 '+c.inviteCode+'</span>':''}
+              ${c.inviteCode?`<span class="code-copy" data-code="${c.inviteCode}" style="font-size:9px;color:var(--acc);font-weight:800;cursor:pointer;letter-spacing:1px;display:inline-flex;align-items:center;gap:3px">${ICO.clipboard} ${c.inviteCode}</span>`:''}
             </div>
           </div>`).join('')}
         <button class="add-circle-btn" id="addCircleBtn">＋ &nbsp;Tham gia hoặc tạo nhóm mới</button>
@@ -1694,17 +1729,17 @@ function renderProfileTab(body) {
       <div class="prof-section">
         <div class="section-label">Tài khoản</div>
         <div class="settings-link-row" id="goSettings">
-          <div class="slr-icon" style="background:rgba(59,130,246,.1)">⚙️</div>
+          <div class="slr-icon" style="background:rgba(59,130,246,.1)">${ICO.gear}</div>
           <div><div class="slr-label">Cài đặt</div><div class="slr-sub">Thông báo, bán kính, giao diện</div></div>
           <span class="slr-chev">›</span>
         </div>
         <div class="settings-link-row" id="shareAppRow">
-          <div class="slr-icon" style="background:rgba(255,159,28,.1)">🎁</div>
+          <div class="slr-icon" style="background:rgba(255,159,28,.1)">${ICO.gift}</div>
           <div><div class="slr-label">Chia sẻ ứng dụng</div><div class="slr-sub">Giới thiệu Gom Đơn cho bạn bè</div></div>
           <span class="slr-chev">›</span>
         </div>
       </div>
-      <div class="prof-section"><button class="logout-btn" id="logoutBtn">🚪 Đăng xuất</button></div>
+      <div class="prof-section"><button class="logout-btn" id="logoutBtn">${ICO.logout} Đăng xuất</button></div>
     </div>`;
   body.querySelectorAll('.circle-item-row').forEach(el=>{
     el.onclick=()=>{
@@ -1744,12 +1779,12 @@ function renderSettings(scr) {
       <div class="sg-section">
         <div class="sg-title">Thông báo</div>
         <div class="sg-row">
-          <div class="sg-ico" style="background:rgba(0,177,79,.1)">🔔</div>
+          <div class="sg-ico" style="background:rgba(0,177,79,.1)">${ICO.bell}</div>
           <div class="sg-text"><span>Cảnh báo đơn gom</span><small>Nhận thông báo khi có đơn gần bạn</small></div>
           <input type="checkbox" class="sw-input" id="stAlert" ${alertEnabled?'checked':''}>
         </div>
         <div class="sg-row">
-          <div class="sg-ico" style="background:rgba(59,130,246,.1)">📡</div>
+          <div class="sg-ico" style="background:rgba(59,130,246,.1)">${ICO.radar}</div>
           <div class="sg-text"><span>Bán kính hiện tại</span><small>${alertRadius}m quanh bạn</small></div>
           <span class="slr-val">${alertRadius}m</span>
         </div>
@@ -1758,25 +1793,25 @@ function renderSettings(scr) {
         <div class="sg-title">Giao diện</div>
         <div class="sg-row" id="stThemeRow" style="cursor:pointer">
           <div class="sg-ico" style="background:rgba(255,159,28,.1)">${themeIcon()}</div>
-          <div class="sg-text"><span>Chế độ ${theme==='dark'?'Tối 🌙':'Sáng ☀️'}</span><small>Nhấn để chuyển sang chế độ ${theme==='dark'?'sáng':'tối'}</small></div>
+          <div class="sg-text"><span>Chế độ ${theme==='dark'?'Tối':'Sáng'}</span><small>Nhấn để chuyển sang chế độ ${theme==='dark'?'sáng':'tối'}</small></div>
           <span class="slr-chev">›</span>
         </div>
       </div>
       <div class="sg-section">
         <div class="sg-title">Tài khoản</div>
         <div class="sg-row">
-          <div class="sg-ico" style="background:rgba(59,130,246,.1)">👤</div>
+          <div class="sg-ico" style="background:rgba(59,130,246,.1)">${ICO.user}</div>
           <div class="sg-text"><span>Google Account</span><small>${currentUser?.email||'—'}</small></div>
         </div>
         <div class="sg-row" id="stLogout" style="cursor:pointer">
-          <div class="sg-ico" style="background:rgba(239,68,68,.08)">🚪</div>
+          <div class="sg-ico" style="background:rgba(239,68,68,.08)">${ICO.logout}</div>
           <div class="sg-text"><span style="color:#ff6b6b">Đăng xuất</span></div>
         </div>
       </div>
       <div class="sg-section">
         <div class="sg-title">Ứng dụng</div>
         <div class="sg-row">
-          <div class="sg-ico" style="background:rgba(107,114,128,.1)">ℹ️</div>
+          <div class="sg-ico" style="background:rgba(107,114,128,.1)">${ICO.info}</div>
           <div class="sg-text"><span>Phiên bản</span><small>Gom Đơn – Phiên bản chính thức</small></div>
           <span class="slr-val">v2.0.0</span>
         </div>
@@ -1798,7 +1833,7 @@ function showAlertsSettingsSheet() {
   scrim.innerHTML = `
     <div class="sheet-box">
       <div class="sh-handle"></div>
-      <div class="sh-title" style="margin-bottom: 8px">Cài Đặt Cảnh Báo 📡</div>
+      <div class="sh-title" style="margin-bottom: 8px;display:flex;align-items:center;gap:6px">${ICO.bell} Cài Đặt Cảnh Báo</div>
       <div class="alert-settings-card" style="border: none; background: transparent; padding: 0">
         <div class="settings-row" style="margin-bottom: 12px">
           <div>
@@ -1810,19 +1845,19 @@ function showAlertsSettingsSheet() {
         <div style="margin-bottom: 12px">
           <div class="sr-label" style="margin-bottom:8px">Bán kính tìm kiếm</div>
           <div class="chip-group">
-            <button class="sm-chip blue ${alertRadius===50?'on':''}" data-r="50">📡 50m</button>
-            <button class="sm-chip blue ${alertRadius===100?'on':''}" data-r="100">📡 100m</button>
-            <button class="sm-chip blue ${alertRadius===200?'on':''}" data-r="200">📡 200m</button>
-            <button class="sm-chip blue ${alertRadius===500?'on':''}" data-r="500">📡 500m</button>
+            <button class="sm-chip blue ${alertRadius===50?'on':''}" data-r="50">${ICO.radar} 50m</button>
+            <button class="sm-chip blue ${alertRadius===100?'on':''}" data-r="100">${ICO.radar} 100m</button>
+            <button class="sm-chip blue ${alertRadius===200?'on':''}" data-r="200">${ICO.radar} 200m</button>
+            <button class="sm-chip blue ${alertRadius===500?'on':''}" data-r="500">${ICO.radar} 500m</button>
           </div>
         </div>
         <div style="margin-bottom: 12px">
           <div class="sr-label" style="margin-bottom:8px">Khung giờ cảnh báo</div>
           <div class="chip-group">
-            <button class="sm-chip ${alertTimeWindows.has('morning')?'on':''}" data-tw="morning">🌅 7–9h</button>
-            <button class="sm-chip ${alertTimeWindows.has('lunch')?'on':''}" data-tw="lunch">☀️ 11–13h</button>
-            <button class="sm-chip ${alertTimeWindows.has('dinner')?'on':''}" data-tw="dinner">🌆 17–19h</button>
-            <button class="sm-chip ${alertTimeWindows.has('allday')?'on':''}" data-tw="allday">🕐 Cả ngày</button>
+            <button class="sm-chip ${alertTimeWindows.has('morning')?'on':''}" data-tw="morning">${ICO.sunrise} 7–9h</button>
+            <button class="sm-chip ${alertTimeWindows.has('lunch')?'on':''}" data-tw="lunch">${ICO.clock} 11–13h</button>
+            <button class="sm-chip ${alertTimeWindows.has('dinner')?'on':''}" data-tw="dinner">${ICO.sunset} 17–19h</button>
+            <button class="sm-chip ${alertTimeWindows.has('allday')?'on':''}" data-tw="allday">${ICO.clock} Cả ngày</button>
           </div>
         </div>
       </div>
@@ -1870,19 +1905,19 @@ function showCreateSheet(circleId) {
   scrim.innerHTML=`
     <div class="sheet-box">
       <div class="sh-handle"></div>
-      <div class="sh-title">Tạo Đơn Gom 📢</div>
+      <div class="sh-title" style="display:flex;align-items:center;gap:7px">${ICO.megaphone} Tạo Đơn Gom</div>
       
       <div style="margin-bottom: 8px">
         <label style="font-size:10px;font-weight:800;color:var(--t3);display:block;margin-bottom:4px">Nhóm nhận đơn gom:</label>
         <select class="cm-input" id="circleSelect" style="margin: 0; padding: 10px; font-size:12px; cursor: pointer; border-radius:10px;">
-          ${myCircles.map(c => `<option value="${c.id}" ${c.id === targetCircleId ? 'selected' : ''}>🏢 ${c.name}</option>`).join('')}
+          ${myCircles.map(c => `<option value="${c.id}" ${c.id === targetCircleId ? 'selected' : ''}>${c.name}</option>`).join('')}
         </select>
       </div>
 
       <div class="sh-sub" style="margin-top: 4px">Mở link group order trong app Grab/ShopeeFood, sao chép and dán vào đây</div>
       <div class="link-wrap">
         <input class="link-input" id="linkInput" placeholder="Dán link đơn nhóm Grab hoặc ShopeeFood vào đây…" autocomplete="off">
-        <button class="link-paste" id="pasteBtn" title="Dán từ clipboard">📋</button>
+        <button class="link-paste" id="pasteBtn" title="Dán từ clipboard">${ICO.clipboard}</button>
       </div>
       
       <div style="margin-bottom: 8px; margin-top: 4px">
@@ -1891,12 +1926,12 @@ function showCreateSheet(circleId) {
       </div>
 
       <div class="plat-chips">
-        <button class="plat-chip-btn grab-chip" id="fillGrab">🍜 Demo: Link Grab</button>
-        <button class="plat-chip-btn shopee-chip" id="fillShopee">🧋 Demo: Link Shopee</button>
+        <button class="plat-chip-btn grab-chip" id="fillGrab">Demo: Link Grab</button>
+        <button class="plat-chip-btn shopee-chip" id="fillShopee">Demo: Link Shopee</button>
       </div>
       <button class="bcast-btn" id="broadcastBtn">
         <div class="pulse-ring"></div>
-        <span>📢 Gom Đơn Với Nhóm!</span>
+        <span style="display:inline-flex;align-items:center;gap:7px">${ICO.megaphone} Gom Đơn Với Nhóm!</span>
       </button>
       <button class="dl-cancel" id="sheetClose">Hủy</button>
     </div>`;
@@ -1994,7 +2029,7 @@ function showCreateSheet(circleId) {
         });
       }
     }catch(e){
-      btn.disabled=false; btn.innerHTML='<div class="pulse-ring"></div><span>📢 Gom Đơn Với Nhóm!</span>';
+      btn.disabled=false; btn.innerHTML=`<div class="pulse-ring"></div><span style="display:inline-flex;align-items:center;gap:7px">${ICO.megaphone} Gom Đơn Với Nhóm!</span>`;
       toast('❌ '+e.message);
     }
   };
@@ -2011,13 +2046,13 @@ function showCircleModal() {
   const scrim=document.createElement('div'); scrim.className='cm-scrim';
   scrim.innerHTML=`
     <div class="cm-box">
-      <div class="cm-hdr"><h3>👥 Quản lý Nhóm</h3><button class="cm-x" id="cmClose">✕</button></div>
+      <div class="cm-hdr"><h3 style="display:flex;align-items:center;gap:7px">${ICO.people} Quản lý Nhóm</h3><button class="cm-x" id="cmClose">✕</button></div>
       <div class="cm-body">
         ${myCircles.length?`<div style="display:flex;flex-direction:column;gap:6px">
           ${myCircles.map(c=>`<div class="ci-row" data-id="${c.id}" style="cursor:pointer">
             <div><div class="ci-name">${c.name}</div><div class="ci-loc">${c.location||''}</div></div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-              ${c.inviteCode?`<span class="code-ic" data-ic="${c.inviteCode}" style="font-size:10px;color:var(--acc);font-weight:800;letter-spacing:1px;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:3px 8px">📋 Mã: ${c.inviteCode}</span>`:''}
+              ${c.inviteCode?`<span class="code-ic" data-ic="${c.inviteCode}" style="font-size:10px;color:var(--acc);font-weight:800;letter-spacing:1px;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:3px 8px;display:inline-flex;align-items:center;gap:3px">${ICO.clipboard} Mã: ${c.inviteCode}</span>`:''}
             </div>
           </div>`).join('')}
         </div>`:'<div style="font-size:11px;color:var(--t3);text-align:center;padding:10px">Bạn chưa ở trong nhóm nào</div>'}
@@ -2088,17 +2123,17 @@ function showHistoryOrderDetailModal(order) {
     const mapsLink = `https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}`;
     locationHtml = `
       <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left;flex-shrink:0">
-        <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:4px">📍 Vị trí giao hàng</div>
+        <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:4px;display:flex;align-items:center;gap:5px">${ICO.pin} Vị trí giao hàng</div>
         <div style="font-size:11px;color:var(--t1);margin-bottom:8px">Địa chỉ: <strong>${deliveryAddress}</strong></div>
         <a href="${mapsLink}" target="_blank" class="join-btn-main ${isSh?'shopee':'grab'}" style="display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:11px;padding:8px 12px;border-radius:8px;color:#000;font-weight:800;width:100%;box-sizing:border-box">
-          📍 Mở bản đồ Google Maps
+          ${ICO.pin} Mở bản đồ Google Maps
         </a>
       </div>
     `;
   } else {
     locationHtml = `
       <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left;flex-shrink:0">
-        <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:4px">📍 Vị trí giao hàng</div>
+        <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:4px;display:flex;align-items:center;gap:5px">${ICO.pin} Vị trí giao hàng</div>
         <div style="font-size:11px;color:var(--t1)">Địa chỉ: <strong>${deliveryAddress}</strong> (Không có định vị GPS)</div>
       </div>
     `;
@@ -2107,7 +2142,7 @@ function showHistoryOrderDetailModal(order) {
   scrim.innerHTML = `
     <div class="cm-box" style="max-height:85%">
       <div class="cm-hdr">
-        <h3>📋 Chi tiết Đơn Lịch Sử</h3>
+        <h3 style="display:flex;align-items:center;gap:7px">${ICO.list} Chi tiết Đơn Lịch Sử</h3>
         <button class="cm-x" id="cmClose">✕</button>
       </div>
       <div class="cm-body" style="gap:12px;max-height:70vh">
@@ -2126,7 +2161,7 @@ function showHistoryOrderDetailModal(order) {
         ${locationHtml}
 
         <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left;flex-shrink:0">
-          <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:8px">👥 Thành viên tham gia (${ppl})</div>
+          <div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:8px;display:flex;align-items:center;gap:6px">${ICO.people} Thành viên tham gia (${ppl})</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             ${(order.participants || []).map(p => `
               <div style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:3px 8px;font-size:10px">
@@ -2138,7 +2173,7 @@ function showHistoryOrderDetailModal(order) {
         </div>
 
         <div class="chat-col" style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:left;flex-shrink:0">
-          <div style="font-size:11px;font-weight:800;color:var(--t2)">💬 Nhật ký trò chuyện</div>
+          <div style="font-size:11px;font-weight:800;color:var(--t2);display:flex;align-items:center;gap:5px">${ICO.chat} Nhật ký trò chuyện</div>
           <div class="chat-box" style="height:150px;max-height:150px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
             ${(order.messages || []).length === 0 
               ? `<div class="no-items" style="margin:auto;font-size:10px;color:var(--t3)">Không có tin nhắn nào trong đơn gom này.</div>` 
@@ -2158,7 +2193,7 @@ function showHistoryOrderDetailModal(order) {
         </div>
         
         <button class="cm-cta" id="openLinkBtn" style="font-size:11px;padding:10px;width:100%;flex-shrink:0">
-          🔗 Xem Link Gốc Trên Grab/ShopeeFood
+          <span style="display:inline-flex;align-items:center;gap:5px">${ICO.link} Xem Link Gốc Trên Grab/ShopeeFood</span>
         </button>
       </div>
     </div>
