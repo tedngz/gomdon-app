@@ -1020,11 +1020,26 @@ function renderHomeTab(body) {
     return;
   }
 
-  // Render sections for each circle
-  content.innerHTML = myCircles.map(circle => {
-    // Find all active orders for this circle
-    const orders = circleOrders.filter(o => o.circleId === circle.id && (o.status === 'collecting' || o.status === 'closed'));
-    
+  const circlesWithOrders = myCircles.map(circle => {
+    return {
+      circle,
+      orders: circleOrders.filter(o => o.circleId === circle.id && (o.status === 'collecting' || o.status === 'closed'))
+    };
+  }).filter(c => c.orders.length > 0);
+
+  if (circlesWithOrders.length === 0) {
+    content.innerHTML = `
+      <div class="empty-state" style="border:none">
+        <div class="es-icon" style="background:var(--s2)">📋</div>
+        <div class="es-title" style="color:var(--t2)">Chưa có đơn gom nào đang mở</div>
+        <div class="es-desc">Hiện không có đơn gom nào trong các nhóm của bạn. Hãy mở một đơn gom mới để mọi người cùng đặt món.</div>
+        <button class="es-cta" onclick="showCreateSheet()">＋ 📢 Mở đơn gom mới</button>
+      </div>`;
+    return;
+  }
+
+  // Render sections for each circle that has orders
+  content.innerHTML = circlesWithOrders.map(({circle, orders}) => {
     return `
       <div class="circle-section" data-circle-id="${circle.id}">
         <div class="circle-section-header">
@@ -1034,17 +1049,7 @@ function renderHomeTab(body) {
           </button>
         </div>
         <div class="circle-section-content" id="circleContent-${circle.id}">
-          ${orders.length === 0 
-            ? `
-              <div class="circle-section-empty">
-                <span>Chưa có đơn gom nào đang mở trong nhóm này.</span>
-                <span class="es-link" data-circle-id="${circle.id}" data-action="create-order">Mở đơn ngay →</span>
-              </div>
-            `
-            : `
-              <div class="circle-orders-list" id="circleOrdersList-${circle.id}"></div>
-            `
-          }
+          <div class="circle-orders-list" id="circleOrdersList-${circle.id}"></div>
         </div>
       </div>
     `;
@@ -1059,18 +1064,15 @@ function renderHomeTab(body) {
   });
 
   // Render order cards inside their respective circle lists
-  myCircles.forEach(circle => {
-    const orders = circleOrders.filter(o => o.circleId === circle.id && (o.status === 'collecting' || o.status === 'closed'));
-    if (orders.length > 0) {
-      const listContainer = content.querySelector(`#circleOrdersList-${circle.id}`);
-      if (listContainer) {
-        orders.forEach(order => {
-          const cardWrapper = document.createElement('div');
-          cardWrapper.className = 'order-card-wrapper';
-          listContainer.appendChild(cardWrapper);
-          renderActiveOrderCard(cardWrapper, order);
-        });
-      }
+  circlesWithOrders.forEach(({circle, orders}) => {
+    const listContainer = content.querySelector(`#circleOrdersList-${circle.id}`);
+    if (listContainer) {
+      orders.forEach(order => {
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = 'order-card-wrapper';
+        listContainer.appendChild(cardWrapper);
+        renderActiveOrderCard(cardWrapper, order);
+      });
     }
   });
 }
