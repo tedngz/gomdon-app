@@ -1598,9 +1598,9 @@ function displayHistory(body, history) {
       <div class="history-text"><h4>Lịch sử đơn gom</h4><p>Tổng số ${filtered.length} đơn</p></div>
     </div>
     <div class="history-filters">
-      <button class="hf-chip ${historyFilter==='all'?'on':''}" data-f="all">${ICO.list} Tất cả</button>
-      <button class="hf-chip ${historyFilter==='host'?'on':''}" data-f="host">${ICO.crown} Tôi gom</button>
-      <button class="hf-chip ${historyFilter==='joined'?'on':''}" data-f="joined">${ICO.open} Tôi chung</button>
+      <button class="hf-chip ${historyFilter==='all'?'on':''}" data-f="all">${ICO.list}Tất cả</button>
+      <button class="hf-chip ${historyFilter==='host'?'on':''}" data-f="host">${ICO.crown}Tôi gom</button>
+      <button class="hf-chip ${historyFilter==='joined'?'on':''}" data-f="joined">${ICO.open}Tôi chung</button>
     </div>
     <div id="histList">
       ${filtered.length===0
