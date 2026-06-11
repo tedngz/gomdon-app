@@ -408,6 +408,7 @@ async function createOrder(link, platform, lat, lng, circleId, customTitle) {
         lng: lng || null
       }
     ],
+    participantUids: [currentUser.uid],
     messages: [],
     lat:lat||null, lng:lng||null,
     createdAt:firebase.firestore.FieldValue.serverTimestamp(),
@@ -441,7 +442,8 @@ async function joinOrderDirect(orderId) {
     lng
   };
   await ref.update({
-    participants: firebase.firestore.FieldValue.arrayUnion(participant)
+    participants: firebase.firestore.FieldValue.arrayUnion(participant),
+    participantUids: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
   });
   await db.collection('users').doc(currentUser.uid).update({
     'stats.ordersJoined':firebase.firestore.FieldValue.increment(1),
@@ -459,7 +461,10 @@ async function leaveOrderDirect(orderId) {
   if (!isJoined) return;
   
   const updatedParticipants = (order.participants || []).filter(p => p.uid !== currentUser.uid);
-  await ref.update({participants: updatedParticipants});
+  await ref.update({
+    participants: updatedParticipants,
+    participantUids: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+  });
   
   await db.collection('users').doc(currentUser.uid).update({
     'stats.ordersJoined': firebase.firestore.FieldValue.increment(-1),
@@ -682,7 +687,7 @@ function subscribeToOrders() {
 
   unsubPublicOrders = db.collection('orders')
     .where('circleId', '==', 'public')
-    .where('hostUid', '==', currentUser?.uid)
+    .where('participantUids', 'array-contains', currentUser?.uid)
     .where('status', 'in', ['collecting', 'closed'])
     .onSnapshot(snap => {
       publicOrdersRaw = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
@@ -1049,7 +1054,7 @@ function renderHomeTab(body) {
   const publicOrders = circleOrders.filter(o => o.circleId === 'public' && (o.status === 'collecting' || o.status === 'closed'));
   if (publicOrders.length > 0) {
     circlesWithOrders.unshift({
-      circle: { id: 'public', name: 'Đơn gom công khai của tôi' },
+      circle: { id: 'public', name: '🌐 Đơn gom công khai quanh đây' },
       orders: publicOrders
     });
   }
@@ -1530,7 +1535,7 @@ function displayNearby(body) {
       btn.disabled = true;
       try {
         const isMember = myCircles.some(c => c.id === o.circleId);
-        if (!isMember) {
+        if (!isMember && o.circleId !== 'public') {
           await joinCircleDirect(o.circleId);
         }
         await joinOrderDirect(o.id);
