@@ -1548,8 +1548,12 @@ function displayNearby(body) {
       btn.disabled = true;
       try {
         const isMember = myCircles.some(c => c.id === o.circleId);
-        if (!isMember && o.circleId !== 'public') {
-          await joinCircleDirect(o.circleId);
+        if (!isMember && o.circleId && o.circleId !== 'public') {
+          try {
+            await joinCircleDirect(o.circleId);
+          } catch (circleErr) {
+            console.warn('Could not join group, proceeding to order:', circleErr);
+          }
         }
         await joinOrderDirect(o.id);
         localStorage.setItem('gd_last_used_circle_id', o.circleId);
