@@ -1014,7 +1014,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
     height: 270px;
   }
   .chat-col {
-    height: 345px;
+    height: 341px;
   }
 
   .oc-right-col > .items-list {
@@ -1460,7 +1460,6 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--border);
-  margin-bottom: 8px;
 }
 .map-with-overlay .compact-map {
   border: none;

@@ -1094,7 +1094,7 @@ function renderActiveOrderCard(container, order) {
       </div>
       <div class="oc-body">
         <div class="oc-left-col">
-          <button class="join-btn-main ${isSh?'shopee':'grab'}" id="openAppBtn" style="margin-bottom: 8px">
+          <button class="join-btn-main ${isSh?'shopee':'grab'}" id="openAppBtn">
             🚀 Mở Grab/Shopee &amp; Chọn Món
           </button>
           
@@ -1136,7 +1136,7 @@ function renderActiveOrderCard(container, order) {
               </div>`;
           })()}
 
-          <div class="order-actions" style="margin-top: 8px">
+          <div class="order-actions">
             ${isHost 
               ? (order.status === 'closed'
                 ? `<button class="btn-primary grab" id="archiveOrderBtn" style="justify-content:center;background:linear-gradient(135deg,#10b981,#059669)">${ICO.flag} Giải tán đơn gom</button>
@@ -1152,7 +1152,7 @@ function renderActiveOrderCard(container, order) {
                   )
                 )
             }
-            <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:2px" id="shareBtn">${ICO.share} Chia sẻ link nhóm</button>
+            <button class="btn-ghost" style="width:100%;justify-content:center;" id="shareBtn">${ICO.share} Chia sẻ link nhóm</button>
           </div>
         </div>
         <div class="oc-right-col">
