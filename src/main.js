@@ -387,13 +387,13 @@ async function handleInviteCode(code) {
 }
 
 async function createOrder(link, platform, lat, lng, circleId, customTitle) {
-  const targetCircleId = circleId || localStorage.getItem('gd_last_used_circle_id') || myCircles[0]?.id;
-  const circle = myCircles.find(c => c.id === targetCircleId) || myCircles[0];
+  const targetCircleId = circleId === 'public' ? 'public' : (circleId || localStorage.getItem('gd_last_used_circle_id') || myCircles[0]?.id);
+  const circle = targetCircleId === 'public' ? null : (myCircles.find(c => c.id === targetCircleId) || myCircles[0]);
   const restaurant = customTitle || autoGenerateTitle(link) || (platform === 'shopeefood' ? 'ShopeeFood' : 'GrabFood');
   const emoji = platform === 'shopeefood' ? '🧋' : '🍜';
   const normalizedLink = ensureAbsoluteUrl(link);
   const data   = {
-    circleId:targetCircleId, circleName:circle?.name||'',
+    circleId:targetCircleId, circleName: targetCircleId === 'public' ? 'Mọi người xung quanh' : (circle?.name||''),
     hostUid:currentUser.uid, hostName:currentUser.displayName, hostAvatar:currentUser.photoURL,
     restaurant, emoji, platform, link:normalizedLink,
     status:'collecting',
@@ -1898,7 +1898,8 @@ function showCreateSheet(circleId) {
       <div style="margin-bottom: 8px">
         <label style="font-size:10px;font-weight:800;color:var(--t3);display:block;margin-bottom:4px">Nhóm nhận đơn gom:</label>
         <select class="cm-input" id="circleSelect" style="margin: 0; padding: 10px; font-size:12px; cursor: pointer; border-radius:10px;">
-          ${myCircles.map(c => `<option value="${c.id}" ${c.id === targetCircleId ? 'selected' : ''}>${c.name}</option>`).join('')}
+          <option value="public" ${targetCircleId === 'public' ? 'selected' : ''}>🌐 Không chọn nhóm (Công khai gần đây)</option>
+          ${myCircles.map(c => `<option value="${c.id}" ${c.id === targetCircleId ? 'selected' : ''}>🏢 ${c.name}</option>`).join('')}
         </select>
       </div>
 
@@ -1913,10 +1914,7 @@ function showCreateSheet(circleId) {
         <input class="cm-input" id="restaurantTitleInput" placeholder="Tên quán ăn (tự động nhận diện khi dán link)" value="Đơn gom của ${firstName()}" style="margin: 0; padding: 10px; font-size:12px;" autocomplete="off">
       </div>
 
-      <div class="plat-chips">
-        <button class="plat-chip-btn grab-chip" id="fillGrab">Demo: Link Grab</button>
-        <button class="plat-chip-btn shopee-chip" id="fillShopee">Demo: Link Shopee</button>
-      </div>
+
       <button class="bcast-btn" id="broadcastBtn">
         <div class="pulse-ring"></div>
         <span style="display:inline-flex;align-items:center;gap:7px">${ICO.megaphone} Gom Đơn Với Nhóm!</span>
@@ -1946,14 +1944,7 @@ function showCreateSheet(circleId) {
     }
     catch(e){ toast('⚠️ Không đọc được clipboard'); }
   };
-  scrim.querySelector('#fillGrab').onclick=()=>{ 
-    linkInput.value='https://r.grab.com/g/s/group-order-demo-'+Date.now(); 
-    updateTitleFromLink();
-  };
-  scrim.querySelector('#fillShopee').onclick=()=>{ 
-    linkInput.value='https://shopeefood.vn/share/group/'+Date.now(); 
-    updateTitleFromLink();
-  };
+
   scrim.querySelector('#sheetClose').onclick=()=>scrim.remove();
   scrim.onclick=e=>{ if(e.target===scrim) scrim.remove(); };
   scrim.querySelector('#broadcastBtn').onclick=async()=>{
