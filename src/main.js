@@ -1130,7 +1130,6 @@ function renderActiveOrderCard(container, order) {
                       ${isLive ? '<span class="live-dot"></span>' : ICO.pin}
                       <strong>${badgeLabel}${distBadge}</strong>
                     </span>
-                    <a href="${mapsLink}" target="_blank" class="map-badge-link ${isSh?'shopee-txt':'grab-txt'}">${ICO.open} Maps</a>
                   </div>
                   ${enableGpsBtn}
                 </div>
@@ -1170,7 +1169,7 @@ function renderActiveOrderCard(container, order) {
             </div>
           </div>
           <!-- Chat -->
-          <div class="chat-col" style="flex:1;min-height:0">
+          <div class="chat-col">
             <div class="oc-members-hdr">${ICO.chat} Trò chuyện nhóm</div>
             <div class="chat-box" id="chatBox">
               ${(order.messages || []).length === 0
