@@ -63,7 +63,9 @@ let auth, db, googleProvider;
 ═══════════════════════════════════════════════════════════ */
 const vnd       = n  => Math.round(n).toLocaleString('vi-VN') + ' đ';
 const nowTime   = () => { const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); };
-const themeIcon = () => theme === 'dark' ? '☀️' : '🌙';
+const themeIcon = () => theme === 'dark'
+  ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
+  : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
 const firstName = () => currentUser?.displayName?.split(' ').pop() || 'bạn';
 const curCircle = () => myCircles.find(c => c.id === (localStorage.getItem('gd_last_used_circle_id') || '')) || myCircles[0] || null;
 const curOrder  = () => circleOrders.find(o => o.status === 'collecting') || null;
@@ -865,10 +867,12 @@ function renderApp() {
         <span class="bar-title">Gom Đơn</span>
       </div>
       <div class="bar-right">
-        <button class="bar-theme-toggle" id="manageCirclesBtn" title="Quản lý nhóm" style="font-size: 15px;">👥</button>
+        <button class="bar-theme-toggle" id="manageCirclesBtn" title="Quản lý nhóm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </button>
         <button class="bar-theme-toggle" id="themeToggleBtn">${themeIcon()}</button>
         <div class="bar-notif" id="notifBtn" title="Cài đặt cảnh báo">
-          🔔
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </div>
       </div>
     </div>
@@ -898,12 +902,14 @@ function renderApp() {
         </span>
         <span class="ni-label">Radar</span>
       </button>
-      <button class="nav-fab" id="fabCreate">
-        <svg class="fab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-      </button>
+      <div class="nav-fab-slot">
+        <button class="nav-fab" id="fabCreate">
+          <svg class="fab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
       <button class="nav-item ${currentTab==='history'?'on':''}" data-tab="history">
         <span class="ni-icon">
           <svg class="ni-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
