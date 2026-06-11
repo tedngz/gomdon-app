@@ -999,11 +999,13 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
   .oc-left-col {
     grid-column: 1;
     gap: 12px;
+    justify-content: space-between;
   }
 
   .oc-right-col {
     grid-column: 2;
     gap: 12px;
+    justify-content: space-between;
     min-height: 0;
   }
 
