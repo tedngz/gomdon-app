@@ -38,6 +38,7 @@ let circleOrders = [];     // Real-time orders from Firestore
 let nearbyOrders = [];     // GPS-filtered orders
 let userLocation = null;   // {lat, lng}
 let unsubOrders  = null;   // Firestore unsubscribe
+let unsubPublicOrders = null; // Firestore unsubscribe for public hosted orders
 let hostLocationWatchId = null; // Geolocation watch ID for host
 let lastWrittenCoords = null;   // Last written {lat, lng} for host to optimize Firestore writes
 let lastWrittenOrderId = null;  // Active order ID being tracked
@@ -553,35 +554,34 @@ async function loadOrdersHistory() {
 function subscribeToOrders() {
   cleanupSubs();
   const circleIds = myCircles.map(c => c.id);
-  if (circleIds.length === 0) {
-    circleOrders = [];
-    if (currentScreen === 'main' && currentTab === 'home') {
-      const body = document.getElementById('screenBody');
-      if (body) renderHomeTab(body);
-    }
-    return;
-  }
-  unsubOrders = db.collection('orders')
-    .where('circleId', 'in', circleIds)
-    .where('status', 'in', ['collecting', 'closed'])
-    .onSnapshot(snap => {
-      const allOrders = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
-      circleOrders = allOrders.filter(o => {
-        const isParticipant = o.hostUid === currentUser?.uid || (o.participants || []).some(p => p.uid === currentUser?.uid);
-        return o.status === 'collecting' || (o.status === 'closed' && isParticipant);
-      });
-      circleOrders.sort((a,b) => {
-        const tA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date();
-        const tB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date();
-        return tB - tA;
-      });
+  let groupOrdersRaw = [];
+  let publicOrdersRaw = [];
 
-      // Handle host and guest live location sharing
-      const activeParticipatingOrder = circleOrders.find(o => 
-        (o.hostUid === currentUser?.uid || (o.participants || []).some(p => p.uid === currentUser?.uid)) && 
-        (o.status === 'collecting' || o.status === 'closed')
-      );
-      if (activeParticipatingOrder) {
+  const combineAndRender = () => {
+    const allOrders = [...groupOrdersRaw, ...publicOrdersRaw];
+    const uniqueOrders = [];
+    const seen = new Set();
+    for (const o of allOrders) {
+      if (!seen.has(o.id)) { seen.add(o.id); uniqueOrders.push(o); }
+    }
+    
+    circleOrders = uniqueOrders.filter(o => {
+      const isParticipant = o.hostUid === currentUser?.uid || (o.participants || []).some(p => p.uid === currentUser?.uid);
+      return o.status === 'collecting' || (o.status === 'closed' && isParticipant);
+    });
+    
+    circleOrders.sort((a,b) => {
+      const tA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date();
+      const tB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date();
+      return tB - tA;
+    });
+
+    // Handle host and guest live location sharing
+    const activeParticipatingOrder = circleOrders.find(o => 
+      (o.hostUid === currentUser?.uid || (o.participants || []).some(p => p.uid === currentUser?.uid)) && 
+      (o.status === 'collecting' || o.status === 'closed')
+    );
+    if (activeParticipatingOrder) {
         const isHost = activeParticipatingOrder.hostUid === currentUser?.uid;
         if (hostLocationWatchId && lastWrittenOrderId !== activeParticipatingOrder.id) {
           navigator.geolocation.clearWatch(hostLocationWatchId);
@@ -668,7 +668,26 @@ function subscribeToOrders() {
         const body = document.getElementById('screenBody');
         if (body) renderHomeTab(body);
       }
-    }, err => console.warn('Orders sub:', err.message));
+  };
+
+  if (circleIds.length > 0) {
+    unsubOrders = db.collection('orders')
+      .where('circleId', 'in', circleIds)
+      .where('status', 'in', ['collecting', 'closed'])
+      .onSnapshot(snap => {
+        groupOrdersRaw = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+        combineAndRender();
+      }, err => console.warn('Orders sub:', err.message));
+  }
+
+  unsubPublicOrders = db.collection('orders')
+    .where('circleId', '==', 'public')
+    .where('hostUid', '==', currentUser?.uid)
+    .where('status', 'in', ['collecting', 'closed'])
+    .onSnapshot(snap => {
+      publicOrdersRaw = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+      combineAndRender();
+    }, err => console.warn('Public Orders sub:', err.message));
 }
 
 function cleanupSubs() {
@@ -1026,6 +1045,14 @@ function renderHomeTab(body) {
       orders: circleOrders.filter(o => o.circleId === circle.id && (o.status === 'collecting' || o.status === 'closed'))
     };
   }).filter(c => c.orders.length > 0);
+
+  const publicOrders = circleOrders.filter(o => o.circleId === 'public' && (o.status === 'collecting' || o.status === 'closed'));
+  if (publicOrders.length > 0) {
+    circlesWithOrders.unshift({
+      circle: { id: 'public', name: 'Đơn gom công khai của tôi' },
+      orders: publicOrders
+    });
+  }
 
   if (circlesWithOrders.length === 0) {
     content.innerHTML = `
@@ -1885,7 +1912,7 @@ function showAlertsSettingsSheet() {
 function showCreateSheet(circleId) {
   const targetCircleId = circleId && typeof circleId === 'string' 
     ? circleId 
-    : (localStorage.getItem('gd_last_used_circle_id') || myCircles[0]?.id || null);
+    : 'public';
   const scr = document.getElementById('screen');
   scr.querySelector('.sheet-scrim')?.remove();
   const scrim = document.createElement('div');
