@@ -1438,7 +1438,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
   position: relative;
   z-index: 1;
   width: 100%;
-  height: 190px;
+  height: 230px;
   border-radius: 14px;
   border: 1px solid var(--border);
   overflow: hidden;
@@ -1455,7 +1455,7 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
 .map-with-overlay .compact-map {
   border: none;
   border-radius: 0;
-  height: 190px;
+  height: 230px;
 }
 .map-location-overlay {
   position: absolute;
