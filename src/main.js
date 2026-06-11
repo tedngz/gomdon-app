@@ -1101,69 +1101,41 @@ function renderActiveOrderCard(container, order) {
           ${(() => {
             const coords = getOrderCoordinates(order);
             const isLive = coords.isLive;
-            
-            // Trigger location fetch for guest in background if not available
+            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
+
             if (!isHost && !userLocation && !isFetchingUserLocation) {
               isFetchingUserLocation = true;
-              getUserLocation().then(() => {
-                isFetchingUserLocation = false;
-                renderApp();
-              }).catch(() => {
-                isFetchingUserLocation = false;
-              });
+              getUserLocation().then(() => { isFetchingUserLocation = false; renderApp(); }).catch(() => { isFetchingUserLocation = false; });
             }
-            
-            if (isHost) {
-              return `
-                <div class="live-location-badge host" style="margin-bottom:8px;display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
-                  <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
-                    <div style="display:flex;align-items:center;gap:8px">
-                      ${isLive ? '<span class="live-dot"></span>' : '📍'}
-                      <strong style="color:var(--t1)">
-                        ${isLive ? 'Vị trí của bạn đang được chia sẻ trực tiếp' : 'Địa chỉ giao hàng (Mặc định)'}
-                      </strong>
-                    </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}" target="_blank" style="font-weight:700;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
-                      📍 Xem bản đồ
-                    </a>
+
+            const badgeLabel = isHost
+              ? (isLive ? 'Vị trí của bạn đang được chia sẻ trực tiếp' : 'Địa chỉ giao hàng')
+              : (isLive ? 'Trực tiếp' : 'Địa điểm nhóm');
+
+            const distBadge = (!isHost) ? (() => {
+              const d = userLocation ? calcDistance(userLocation.lat, userLocation.lng, coords.lat, coords.lng) : null;
+              return d !== null ? ` · Cách bạn ${distLabel(d)}` : ' · Đang định vị...';
+            })() : '';
+
+            const enableGpsBtn = isHost && !isLive
+              ? `<button id="enableGpsBtn" class="map-overlay-gps-btn btn-primary ${isSh?'shopee':'grab'}">${ICO.radar} Chia sẻ vị trí trực tiếp</button>`
+              : '';
+
+            return `
+              <div class="map-with-overlay">
+                <div id="active-order-map-${order.id}" class="compact-map"></div>
+                <div class="map-location-overlay">
+                  <div class="map-badge-row">
+                    <span class="map-badge-left">
+                      ${isLive ? '<span class="live-dot"></span>' : ICO.pin}
+                      <strong>${badgeLabel}${distBadge}</strong>
+                    </span>
+                    <a href="${mapsLink}" target="_blank" class="map-badge-link ${isSh?'shopee-txt':'grab-txt'}">${ICO.open} Maps</a>
                   </div>
-                  ${!isLive ? `
-                    <button id="enableGpsBtn" class="btn-primary ${isSh?'shopee':'grab'}" style="font-size:11px;padding:6px 12px;width:100%;justify-content:center;margin-top:4px">
-                      📡 Chia sẻ vị trí trực tiếp của bạn
-                    </button>
-                  ` : ''}
+                  ${enableGpsBtn}
                 </div>
-                <div id="active-order-map-${order.id}" class="compact-map" style="width: 100%; height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
-              `;
-            } else {
-              const distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, coords.lat, coords.lng) : null;
-              const distanceStr = distance !== null ? `Cách bạn ${distLabel(distance)}` : 'Đang định vị...';
-              return `
-                <div class="live-location-badge guest" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s3);border:1px solid var(--border);border-radius:12px;font-size:11px;width:100%;box-sizing:border-box">
-                  <div style="display:flex;align-items:center;gap:8px">
-                    ${isLive ? '<span class="live-dot"></span>' : ICO.pin}
-                    <strong style="color:var(--t1)">${isLive ? 'Trực tiếp' : 'Địa điểm nhóm'}</strong>
-                  </div>
-                  <a href="https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}" target="_blank" style="font-weight:800;color:${isSh?'var(--shopee)':'var(--grab)'};text-decoration:none;display:flex;align-items:center;gap:4px">
-                    ${ICO.pin} Xem bản đồ (${distanceStr})
-                  </a>
-                </div>
-                <div id="active-order-map-${order.id}" class="compact-map" style="width: 100%; height: 110px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); overflow: hidden; position: relative;"></div>
-              `;
-            }
+              </div>`;
           })()}
-          
-          <div style="background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:12px">
-            <div style="font-size:11px;font-weight:800;color:var(--t1);margin-bottom:8px;display:flex;align-items:center;gap:6px">${ICO.people} Thành viên (${ppl})</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center" id="participantsList">
-              ${(order.participants || []).map(p => `
-                <div style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:3px 8px;font-size:10px">
-                  <img src="${p.avatar || ''}" onerror="this.style.display='none'" style="width:18px;height:18px;border-radius:50%;object-fit:cover">
-                  <span style="color:var(--t1)">${p.name.split(' ').pop()}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
 
           <div class="order-actions" style="margin-top: 8px">
             ${isHost 
@@ -1184,27 +1156,41 @@ function renderActiveOrderCard(container, order) {
             <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:2px" id="shareBtn">${ICO.share} Chia sẻ link nhóm</button>
           </div>
         </div>
-        <div class="oc-right-col chat-col">
-          <div style="font-size:11px;font-weight:800;color:var(--t1);margin-bottom:4px;display:flex;align-items:center;gap:5px">${ICO.chat} Trò chuyện nhóm</div>
-          <div class="chat-box" id="chatBox">
-            ${(order.messages || []).length === 0 
-              ? `<div class="no-items" style="margin:auto">Chưa có tin nhắn nào. Chat để hẹn địa điểm và ck tiền nhé!</div>` 
-              : (order.messages || []).map(m => {
-                  const isMe = m.uid === currentUser?.uid;
-                  return `
-                    <div class="chat-msg ${isMe?'me':''}">
-                      <img class="chat-msg-av" src="${m.avatar||''}" onerror="this.style.display='none'" alt="">
-                      <div class="chat-msg-body">
-                        <div class="chat-msg-sender">${m.name.split(' ').pop()}</div>
-                        <div class="chat-msg-text">${m.text}</div>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
+        <div class="oc-right-col">
+          <!-- Members -->
+          <div class="oc-members-card">
+            <div class="oc-members-hdr">${ICO.people} Thành viên (${ppl})</div>
+            <div class="oc-members-list" id="participantsList">
+              ${(order.participants || []).map(p => `
+                <div class="member-pill">
+                  <img src="${p.avatar || ''}" onerror="this.style.display='none'" class="member-pill-av">
+                  <span>${p.name.split(' ').pop()}</span>
+                </div>
+              `).join('')}
+            </div>
           </div>
-          <div class="chat-input-wrap">
-            <input class="cm-input" id="chatInput" placeholder="Nhập tin nhắn..." style="flex:1;margin:0" autocomplete="off">
-            <button class="es-cta" id="chatSendBtn" style="padding:9px 15px;font-size:11px;border-radius:10px">Gửi</button>
+          <!-- Chat -->
+          <div class="chat-col" style="flex:1;min-height:0">
+            <div class="oc-members-hdr">${ICO.chat} Trò chuyện nhóm</div>
+            <div class="chat-box" id="chatBox">
+              ${(order.messages || []).length === 0
+                ? `<div class="no-items" style="margin:auto">Chưa có tin nhắn nào. Chat để hẹn địa điểm và ck tiền nhé!</div>`
+                : (order.messages || []).map(m => {
+                    const isMe = m.uid === currentUser?.uid;
+                    return `
+                      <div class="chat-msg ${isMe?'me':''}">
+                        <img class="chat-msg-av" src="${m.avatar||''}" onerror="this.style.display='none'" alt="">
+                        <div class="chat-msg-body">
+                          <div class="chat-msg-sender">${m.name.split(' ').pop()}</div>
+                          <div class="chat-msg-text">${m.text}</div>
+                        </div>
+                      </div>`;
+                  }).join('')}
+            </div>
+            <div class="chat-input-wrap">
+              <input class="cm-input" id="chatInput" placeholder="Nhập tin nhắn..." style="flex:1;margin:0" autocomplete="off">
+              <button class="es-cta" id="chatSendBtn" style="padding:9px 15px;font-size:11px;border-radius:10px">Gửi</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1221,15 +1207,16 @@ function renderActiveOrderCard(container, order) {
           const map = L.map(mapDiv, {
             center: [coords.lat, coords.lng],
             zoom: 16,
-            zoomControl: false,
+            zoomControl: true,
             attributionControl: false,
-            dragging: false,
-            touchZoom: false,
-            doubleClickZoom: false,
-            scrollWheelZoom: false,
-            boxZoom: false,
-            keyboard: false
+            dragging: true,
+            touchZoom: true,
+            doubleClickZoom: true,
+            scrollWheelZoom: true,
+            boxZoom: true,
+            keyboard: true
           });
+          map.zoomControl.setPosition('bottomright');
           
           const isDark = theme === 'dark';
           const tileUrl = isDark 
