@@ -38,7 +38,8 @@ let circleOrders = [];     // Real-time orders from Firestore
 let nearbyOrders = [];     // GPS-filtered orders
 let userLocation = null;   // {lat, lng}
 let unsubOrders  = null;   // Firestore unsubscribe
-let unsubPublicOrders = null; // Firestore unsubscribe for public hosted orders
+let unsubPublicOrders = null; // Firestore unsubscribe for public joined orders
+let unsubPublicHostedOrders = null; // Firestore unsubscribe for public hosted orders
 let hostLocationWatchId = null; // Geolocation watch ID for host
 let lastWrittenCoords = null;   // Last written {lat, lng} for host to optimize Firestore writes
 let lastWrittenOrderId = null;  // Active order ID being tracked
@@ -560,10 +561,11 @@ function subscribeToOrders() {
   cleanupSubs();
   const circleIds = myCircles.map(c => c.id);
   let groupOrdersRaw = [];
-  let publicOrdersRaw = [];
+  let publicHostedRaw = [];
+  let publicJoinedRaw = [];
 
   const combineAndRender = () => {
-    const allOrders = [...groupOrdersRaw, ...publicOrdersRaw];
+    const allOrders = [...groupOrdersRaw, ...publicHostedRaw, ...publicJoinedRaw];
     const uniqueOrders = [];
     const seen = new Set();
     for (const o of allOrders) {
@@ -690,13 +692,24 @@ function subscribeToOrders() {
     .where('participantUids', 'array-contains', currentUser?.uid)
     .where('status', 'in', ['collecting', 'closed'])
     .onSnapshot(snap => {
-      publicOrdersRaw = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+      publicJoinedRaw = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
       combineAndRender();
-    }, err => console.warn('Public Orders sub:', err.message));
+    }, err => console.warn('Public Joined sub:', err.message));
+
+  unsubPublicHostedOrders = db.collection('orders')
+    .where('circleId', '==', 'public')
+    .where('hostUid', '==', currentUser?.uid)
+    .where('status', 'in', ['collecting', 'closed'])
+    .onSnapshot(snap => {
+      publicHostedRaw = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+      combineAndRender();
+    }, err => console.warn('Public Hosted sub:', err.message));
 }
 
 function cleanupSubs() {
   if (unsubOrders) { unsubOrders(); unsubOrders=null; }
+  if (unsubPublicOrders) { unsubPublicOrders(); unsubPublicOrders=null; }
+  if (unsubPublicHostedOrders) { unsubPublicHostedOrders(); unsubPublicHostedOrders=null; }
   if (hostLocationWatchId) {
     navigator.geolocation.clearWatch(hostLocationWatchId);
     hostLocationWatchId = null;
@@ -1032,17 +1045,6 @@ function renderHomeTab(body) {
   body.querySelector('#avatarBtn')?.addEventListener('click',()=>{ currentTab='profile'; renderApp(); });
   
   const content = body.querySelector('#homeContent');
-  if (myCircles.length === 0) {
-    content.innerHTML = `
-      <div class="empty-state">
-        <div class="es-icon">🏢</div>
-        <div class="es-title">Bạn chưa tham gia nhóm nào</div>
-        <div class="es-desc">Hãy tạo nhóm mới hoặc nhập mã mời của bạn bè để bắt đầu gom đơn chung.</div>
-        <button class="es-cta" id="esJoinCreateBtn">＋ Tham gia hoặc Tạo Nhóm</button>
-      </div>`;
-    content.querySelector('#esJoinCreateBtn').onclick = showCircleModal;
-    return;
-  }
 
   const circlesWithOrders = myCircles.map(circle => {
     return {
@@ -1060,13 +1062,24 @@ function renderHomeTab(body) {
   }
 
   if (circlesWithOrders.length === 0) {
-    content.innerHTML = `
-      <div class="empty-state" style="border:none">
-        <div class="es-icon" style="background:var(--s2)">📋</div>
-        <div class="es-title" style="color:var(--t2)">Chưa có đơn gom nào đang mở</div>
-        <div class="es-desc">Hiện không có đơn gom nào trong các nhóm của bạn. Hãy mở một đơn gom mới để mọi người cùng đặt món.</div>
-        <button class="es-cta" onclick="showCreateSheet()">＋ 📢 Mở đơn gom mới</button>
-      </div>`;
+    if (myCircles.length === 0) {
+      content.innerHTML = `
+        <div class="empty-state">
+          <div class="es-icon">🏢</div>
+          <div class="es-title">Bạn chưa tham gia nhóm nào</div>
+          <div class="es-desc">Hãy tạo nhóm mới hoặc nhập mã mời của bạn bè để bắt đầu gom đơn chung. Hoặc tạo ngay một đơn gom công khai.</div>
+          <button class="es-cta" id="esJoinCreateBtn">＋ Tham gia hoặc Tạo Nhóm</button>
+        </div>`;
+      content.querySelector('#esJoinCreateBtn').onclick = showCircleModal;
+    } else {
+      content.innerHTML = `
+        <div class="empty-state" style="border:none">
+          <div class="es-icon" style="background:var(--s2)">📋</div>
+          <div class="es-title" style="color:var(--t2)">Chưa có đơn gom nào đang mở</div>
+          <div class="es-desc">Hiện không có đơn gom nào trong các nhóm của bạn. Hãy mở một đơn gom mới để mọi người cùng đặt món.</div>
+          <button class="es-cta" onclick="showCreateSheet()">＋ 📢 Mở đơn gom mới</button>
+        </div>`;
+    }
     return;
   }
 
