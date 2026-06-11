@@ -1007,6 +1007,16 @@ body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:n
     min-height: 0;
   }
 
+  .compact-map {
+    height: 270px;
+  }
+  .map-with-overlay .compact-map {
+    height: 270px;
+  }
+  .chat-col {
+    height: 345px;
+  }
+
   .oc-right-col > .items-list {
     max-height: 380px!important;
     height: auto;
